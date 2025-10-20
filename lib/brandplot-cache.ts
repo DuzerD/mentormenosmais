@@ -12,14 +12,28 @@ interface BrandplotCacheData {
 const CACHE_KEY = 'brandplotData'
 const CACHE_EXPIRY_HOURS = 24 // Cache válido por 24 horas
 
+function getLocalStorage(): Storage | null {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+    return null
+  }
+
+  return window.localStorage
+}
+
 export class BrandplotCache {
   static set(data: Omit<BrandplotCacheData, 'timestamp'>): void {
     try {
+      const storage = getLocalStorage()
+      if (!storage) {
+        return
+      }
+
       const cacheData: BrandplotCacheData = {
         ...data,
         timestamp: Date.now()
       }
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
+
+      storage.setItem(CACHE_KEY, JSON.stringify(cacheData))
       console.log('BrandPlot data cached with idUnico:', data.idUnico)
     } catch (error) {
       console.error('Erro ao salvar no cache:', error)
@@ -28,11 +42,16 @@ export class BrandplotCache {
 
   static get(): BrandplotCacheData | null {
     try {
-      const cached = localStorage.getItem(CACHE_KEY)
+      const storage = getLocalStorage()
+      if (!storage) {
+        return null
+      }
+
+      const cached = storage.getItem(CACHE_KEY)
       if (!cached) return null
 
       const data: BrandplotCacheData = JSON.parse(cached)
-      
+
       // Verifica se o cache ainda é válido
       const isExpired = Date.now() - data.timestamp > (CACHE_EXPIRY_HOURS * 60 * 60 * 1000)
       if (isExpired) {
@@ -54,7 +73,12 @@ export class BrandplotCache {
 
   static clear(): void {
     try {
-      localStorage.removeItem(CACHE_KEY)
+      const storage = getLocalStorage()
+      if (!storage) {
+        return
+      }
+
+      storage.removeItem(CACHE_KEY)
       console.log('Cache do BrandPlot limpo')
     } catch (error) {
       console.error('Erro ao limpar cache:', error)

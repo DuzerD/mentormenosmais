@@ -2,11 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Bethany Elignston';
+  src: url('/fonts/Bethany Elignston.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .markdown-content h1 {
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: white;
+  color: #0f172a;
 }
 
 .markdown-content h2 {
@@ -14,7 +21,7 @@
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: white;
+  color: #1e293b;
 }
 
 .markdown-content h3 {
@@ -22,21 +29,21 @@
   font-weight: 600;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  color: white;
+  color: #1e293b;
 }
 
 .markdown-content p {
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.65;
   margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(15, 23, 42, 0.8);
 }
 
 .markdown-content ul,
 .markdown-content ol {
   padding-left: 1.5rem;
   margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(15, 23, 42, 0.8);
 }
 
 .markdown-content ul {
@@ -48,29 +55,32 @@
 }
 
 .markdown-content li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .markdown-content blockquote {
-  border-left: 4px solid rgba(200, 183, 158, 0.5);
+  border-left: 4px solid rgba(59, 130, 246, 0.35);
   padding-left: 1rem;
   font-style: italic;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(15, 23, 42, 0.7);
   margin: 1rem 0;
+  background-color: rgba(191, 219, 254, 0.2);
+  border-radius: 0.5rem;
 }
 
 .markdown-content code {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(191, 219, 254, 0.5);
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-family: monospace;
   font-size: 0.875rem;
+  color: #0f172a;
 }
 
 .markdown-content pre {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(226, 232, 240, 0.6);
   padding: 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   overflow-x: auto;
   margin: 1rem 0;
 }
@@ -81,26 +91,26 @@
 }
 
 .markdown-content a {
-  color: #c8b79e;
+  color: #2563eb;
   text-decoration: underline;
   transition: color 0.2s;
 }
 
 .markdown-content a:hover {
-  color: #d0c0a8;
+  color: #1d4ed8;
 }
 
 .markdown-content img {
   max-width: 100%;
   height: auto;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   margin: 1rem 0;
 }
 
 .markdown-content hr {
   border: 0;
   height: 1px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(148, 163, 184, 0.4);
   margin: 2rem 0;
 }
 
@@ -108,20 +118,109 @@
   width: 100%;
   border-collapse: collapse;
   margin: 1rem 0;
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
 .markdown-content th,
 .markdown-content td {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.5rem;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  padding: 0.75rem;
   text-align: left;
 }
 
 .markdown-content th {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(226, 232, 240, 0.9);
   font-weight: 600;
+  color: #0f172a;
 }
 
 .markdown-content tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(241, 245, 249, 0.9);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 213 27% 94%;
+    --secondary-foreground: 222 47% 16%;
+    --muted: 214 32% 92%;
+    --muted-foreground: 217 15% 45%;
+    --accent: 210 100% 96%;
+    --accent-foreground: 222 47% 18%;
+    --destructive: 0 84% 63%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 199 89% 48%;
+    --chart-3: 187 78% 46%;
+    --chart-4: 162 73% 74%;
+    --chart-5: 43 96% 56%;
+    --radius: 0.75rem;
+    --sidebar-background: 210 40% 99%;
+    --sidebar-foreground: 222 47% 16%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 100% 96%;
+    --sidebar-accent-foreground: 222 47% 18%;
+    --sidebar-border: 214 32% 90%;
+    --sidebar-ring: 217 91% 60%;
+  }
+  .dark {
+    --background: 223 47% 5%;
+    --foreground: 210 40% 98%;
+    --card: 223 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 223 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 70%;
+    --primary-foreground: 223 47% 8%;
+    --secondary: 222 43% 12%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 222 43% 16%;
+    --muted-foreground: 215 20% 75%;
+    --accent: 217 54% 20%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 74% 40%;
+    --destructive-foreground: 210 40% 96%;
+    --border: 222 43% 18%;
+    --input: 222 43% 18%;
+    --ring: 217 91% 70%;
+    --chart-1: 217 91% 70%;
+    --chart-2: 199 89% 63%;
+    --chart-3: 187 78% 66%;
+    --chart-4: 162 73% 70%;
+    --chart-5: 43 96% 60%;
+    --sidebar-background: 222 43% 12%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 217 91% 70%;
+    --sidebar-primary-foreground: 223 47% 8%;
+    --sidebar-accent: 217 54% 20%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 43% 18%;
+    --sidebar-ring: 217 91% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
 }

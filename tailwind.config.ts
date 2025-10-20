@@ -10,9 +10,10 @@ const config: Config = {
   ],
   theme: {
   	extend: {
-  		fontFamily: {
-  			bethany: ['Bethany Elignston', 'serif'],
-  		},
+                fontFamily: {
+                        bethany: ['Bethany Elignston', 'serif'],
+                        sans: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
+                },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
