@@ -21,7 +21,23 @@ export async function POST(request: Request) {
         { error: "Token e senha são obrigatórios" },
         { status: 400 }
       )
-    }    if (password.length < 8) {
+    }
+
+    if (!confirmPassword) {
+      return NextResponse.json(
+        { error: "Confirme a nova senha" },
+        { status: 400 }
+      )
+    }
+
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { error: "As senhas não coincidem" },
+        { status: 400 }
+      )
+    }
+
+    if (password.length < 8) {
       return NextResponse.json(
         { error: "A senha deve ter pelo menos 8 caracteres" },
         { status: 400 }

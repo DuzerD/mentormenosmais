@@ -55,10 +55,12 @@ export async function POST(request: Request) {
 
     if (fetchError || !registro) {
       console.error('[EMBEDDING] Erro ao buscar registro:', fetchError)
-      return NextResponse.json({ 
-        error: "Registro não encontrado" 
+      return NextResponse.json({
+        error: "Registro não encontrado"
       }, { status: 404 })
-    }    // 2. Preparar e limitar texto para embedding
+    }
+
+    // 2. Preparar e limitar texto para embedding
     const truncateText = (text: string, maxLength: number = 2000) => {
       if (!text) return ''
       return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
@@ -148,16 +150,18 @@ export async function POST(request: Request) {
       // Texto é pequeno o suficiente, gerar embedding normal
       const estimatedTokens = Math.floor(textoParaEmbedding.length * 0.75)
       console.log(`[EMBEDDING] Texto dentro do limite (~${estimatedTokens} tokens), gerando embedding único`)
-      
+
       const embeddingResponse = await openai.embeddings.create({
         model: "text-embedding-3-small",
         input: textoParaEmbedding,
         encoding_format: "float"
       })
-      
+
       finalEmbedding = embeddingResponse.data[0].embedding
       console.log(`[EMBEDDING] Embedding gerado com ${finalEmbedding.length} dimensões`)
-    }// 4. Salvar embedding no Supabase
+    }
+
+    // 4. Salvar embedding no Supabase
     const { error: updateError } = await supabase
       .from("brandplot")
       .update({ embedding: finalEmbedding })
@@ -170,7 +174,9 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
-    console.log('[EMBEDDING] Embedding salvo no Supabase com sucesso')    // 5. Preparar documento para Typesense
+    console.log('[EMBEDDING] Embedding salvo no Supabase com sucesso')
+
+    // 5. Preparar documento para Typesense
     // Tratar diagnostico que pode ser string JSON ou objeto
     let diagnosticoObj = {}
     try {
@@ -302,14 +308,46 @@ export async function POST(request: Request) {
   }
 }
 
+function resolveInternalBaseUrl(): string {
+  const candidates = [
+    process.env.INTERNAL_API_BASE_URL,
+    process.env.NEXT_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXTAUTH_URL,
+    process.env.APP_URL,
+    process.env.SITE_URL,
+    process.env.URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+  ].filter((value): value is string => Boolean(value && value.trim().length > 0))
+
+  const normalize = (value: string) => {
+    const trimmed = value.trim()
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+    return withProtocol.replace(/\/$/, '')
+  }
+
+  if (candidates.length > 0) {
+    return normalize(candidates[0])
+  }
+
+  const port = process.env.PORT || '3000'
+  return `http://127.0.0.1:${port}`
+}
+
+function buildInternalApiUrl(path: string): string {
+  const baseUrl = resolveInternalBaseUrl()
+  return new URL(path, `${baseUrl}/`).toString()
+}
+
 /**
  * Função auxiliar para ser chamada internamente após o contexto Gemini
  */
-export async function processEmbeddingInBackground(idUnico: string, contexto: string) {
+export async function processEmbeddingInBackground(idUnico: string, contexto: string): Promise<void> {
   try {
     console.log(`[EMBEDDING_BG] Processando embedding em background para ${idUnico}`)
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/embedding`, {
+
+    const requestUrl = buildInternalApiUrl('/api/embedding')
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -318,13 +356,33 @@ export async function processEmbeddingInBackground(idUnico: string, contexto: st
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      console.error('[EMBEDDING_BG] Erro na requisição:', errorData)
-    } else {
-      const result = await response.json()
-      console.log('[EMBEDDING_BG] Embedding processado com sucesso:', result)
+      const errorClone = response.clone()
+      let errorDetails: unknown = null
+
+      try {
+        errorDetails = await errorClone.json()
+      } catch {
+        try {
+          errorDetails = await errorClone.text()
+        } catch {
+          errorDetails = null
+        }
+      }
+
+      console.error('[EMBEDDING_BG] Erro na requisição:', {
+        status: response.status,
+        statusText: response.statusText,
+        details: errorDetails,
+        url: requestUrl,
+      })
+
+      throw new Error(`Falha ao processar embedding em background (status ${response.status})`)
     }
+
+    const result = await response.json()
+    console.log('[EMBEDDING_BG] Embedding processado com sucesso:', result)
   } catch (error) {
     console.error('[EMBEDDING_BG] Erro ao processar embedding em background:', error)
+    throw error
   }
 }
