@@ -9,11 +9,11 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Brand Plot',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'Ment⊖⊕r — Marca em ordem',
+  description: 'Mentoor — Marca em ordem',
+  generator: 'mentoor.app',
   icons: {
-    icon: '/images/brilho-original-logo.png',
+    icon: '/images/mentoor-mark.svg',
   },
 }
 
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} brand-theme`}>{children}</body>
     </html>
   )
 }
