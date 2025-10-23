@@ -1,30 +1,27 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { Inter } from 'next/font/google'
+import type { Metadata } from "next"
+
+import "./globals.css"
+import { Inter } from "next/font/google"
 
 const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: 'Brand Plot',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: "Mentoor — Marca em ordem",
+  description: "Descubra o que falta para a sua marca vender mais fazendo menos.",
+  generator: "mentoor.app",
   icons: {
-    icon: '/images/brilho-original-logo.png',
+    icon: "/images/mentoor-mark.svg",
   },
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
-      <body className={inter.className}>{children}</body>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${inter.className} brand-theme`}>{children}</body>
     </html>
   )
 }

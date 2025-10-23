@@ -2,11 +2,31 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SharedHeader } from "@/components/SharedHeader"
-import { ArrowLeft, Upload, ImageIcon, Palette, Type, Frame, Eye, RotateCcw, Settings, Zap } from "lucide-react"
+import {
+  ArrowLeft,
+  Upload,
+  ImageIcon,
+  Palette,
+  Type,
+  Frame,
+  Eye,
+  RotateCcw,
+  Settings,
+  Zap,
+  Sparkles,
+  Bot,
+  BadgeCheck,
+  Layers,
+  Workflow,
+  Compass,
+  PlayCircle,
+  MoveRight
+} from "lucide-react"
 
 // Configurações da API Figma
 const FIGMA_TOKEN = process.env.NEXT_PUBLIC_FIGMA_TOKEN
@@ -450,6 +470,85 @@ const pluginCommunication = {
   }
 }
 
+const heroHighlights = [
+  {
+    title: "Guided briefs",
+    description: "Cards sugerem perguntas e entregas baseadas no objetivo.",
+    icon: Compass,
+    accent: "from-[#eef2ff] via-[#f5faff] to-[#e7f1ff]"
+  },
+  {
+    title: "Brand tone lock",
+    description: "IA aplica voz e CTA aprovados para o time inteiro.",
+    icon: BadgeCheck,
+    accent: "from-[#fff4ed] via-[#ffe6d6] to-[#ffd6bc]"
+  },
+  {
+    title: "Figma em sintonia",
+    description: "Tokens, fontes e componentes sincronizados ao plugin.",
+    icon: Layers,
+    accent: "from-[#f3f6ff] via-[#e8ecff] to-[#dde3ff]"
+  }
+]
+
+const heroShowcaseCards = [
+  {
+    id: "preview",
+    title: "Preview rico",
+    description: "Veja a narrativa slide a slide antes de enviar.",
+    icon: PlayCircle,
+    accent: "from-[#fff0f6] via-[#ffe1ee] to-[#ffd3e5]"
+  },
+  {
+    id: "squad",
+    title: "Sprints em squad",
+    description: "Convide especialistas para revisar em tempo real.",
+    icon: Workflow,
+    accent: "from-[#f2fff8] via-[#e4fbed] to-[#d1f4df]"
+  },
+  {
+    id: "assistente",
+    title: "Assistente atento",
+    description: "Plugin entende contexto e propoe ajustes instantaneos.",
+    icon: Bot,
+    accent: "from-[#eef2ff] via-[#dde8ff] to-[#cfdeff]"
+  },
+  {
+    id: "deploy",
+    title: "Deploy sem atrito",
+    description: "Conceito pronto vira historia publicada em segundos.",
+    icon: Zap,
+    accent: "from-[#fff7eb] via-[#ffe8c7] to-[#ffd6a0]"
+  }
+]
+
+const heroChatMessages = [
+  {
+    id: "m1",
+    author: "Voce",
+    role: "user",
+    text: "Preciso de um carrossel futurista para o lancamento do curso."
+  },
+  {
+    id: "m2",
+    author: "Vicgario",
+    role: "assistant",
+    text: "Criando headlines, roteiro completo e CTAs com foco em conversao."
+  },
+  {
+    id: "m3",
+    author: "Voce",
+    role: "user",
+    text: "Inclua gancho para Reels e duas variacoes com humor leve."
+  },
+  {
+    id: "m4",
+    author: "Vicgario",
+    role: "assistant",
+    text: "Pronto! Cinco slides com script detalhado e chamadas testadas."
+  }
+]
+
 export default function FigmaPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedFlow, setSelectedFlow] = useState<"ia" | "manual" | null>(null)
@@ -458,6 +557,12 @@ export default function FigmaPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string[]>([])
   const [showCustomization, setShowCustomization] = useState(false)
+  const heroHighlightItems = useMemo(() => heroHighlights, [])
+  const heroShowcaseItems = useMemo(() => heroShowcaseCards, [])
+  const heroMessageCycle = useMemo(() => heroChatMessages, [])
+  const totalHeroMessages = heroMessageCycle.length
+  const [activeHeroMessage, setActiveHeroMessage] = useState(0)
+  const [isHeroPaused, setIsHeroPaused] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
   
   // Estados do Plugin
@@ -1021,12 +1126,40 @@ export default function FigmaPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (isHeroPaused || totalHeroMessages <= 1) {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveHeroMessage((previous) => (previous + 1) % totalHeroMessages)
+    }, 3600)
+
+    return () => window.clearInterval(intervalId)
+  }, [isHeroPaused, totalHeroMessages])
+
+  const currentHeroMessage = heroMessageCycle[activeHeroMessage] ?? null
+  const heroMessageStyle =
+    currentHeroMessage?.role === "assistant"
+      ? "bg-white/90 border-white/80 text-slate-700 shadow-[0_35px_80px_-60px_rgba(59,130,246,0.45)]"
+      : "bg-gradient-to-br from-[#1f3a8a] to-[#312e81] text-white border-transparent shadow-[0_45px_90px_-70px_rgba(30,64,175,0.65)]"
+
   return (
-    <div className="min-h-screen bg-[#1a1814]">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0f1625] via-[#111c2d] to-[#18273d]">
+      <motion.div
+        className="pointer-events-none absolute -top-32 -left-24 h-72 w-72 rounded-full bg-[#4f8bff]/10 blur-3xl"
+        animate={{ opacity: [0.2, 0.45, 0.2], y: [0, 24, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="pointer-events-none absolute -bottom-40 right-[-120px] h-96 w-96 rounded-full bg-[#efb866]/12 blur-[120px]"
+        animate={{ opacity: [0.18, 0.4, 0.18], y: [0, -28, 0] }}
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+      />
       <SharedHeader />
       <main className="flex h-[calc(100vh-80px)]">
         {/* Interface Principal - Left Side */}
-        <div className="w-[480px] bg-[#1a1814] border-r border-[#c8b79e]/20 p-6 overflow-y-auto">
+        <div className="w-[480px] border-r border-white/10 bg-[#0f1728]/90 p-6 shadow-[20px_0_60px_rgba(8,15,25,0.35)] backdrop-blur-xl overflow-y-auto">
           <div className="max-w-full">
             {/* Header */}
             <div className="mb-6">
@@ -1065,6 +1198,176 @@ export default function FigmaPage() {
                   : "Crie conteúdo otimizado e aplique no Figma"}
               </p>
             </div>
+
+            <motion.section
+              className="relative mb-8 overflow-hidden rounded-[32px] border border-white/10 bg-white/95 p-6 sm:p-8 shadow-[0_40px_90px_-65px_rgba(15,23,42,0.55)]"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              onMouseEnter={() => setIsHeroPaused(true)}
+              onMouseLeave={() => setIsHeroPaused(false)}
+            >
+              <motion.div
+                className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[70%] -translate-x-1/2 rounded-full bg-gradient-to-br from-[#eef2ff] via-[#f6f8ff] to-[#fff7ef] blur-3xl"
+                animate={{ opacity: [0.28, 0.55, 0.28], scale: [1, 1.06, 1] }}
+                transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="pointer-events-none absolute -bottom-40 right-8 h-80 w-80 rounded-full bg-gradient-to-br from-[#dff4ff] via-[#f0f9ff] to-[#fff5eb] blur-[110px]"
+                animate={{ opacity: [0.25, 0.42, 0.25], y: [0, -18, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+              />
+
+              <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="space-y-6">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/90 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <Sparkles className="h-4 w-4 text-slate-500" />
+                    Nova release
+                  </span>
+
+                  <div className="space-y-4">
+                    <h2 className="text-3xl font-semibold leading-tight text-slate-900">
+                      Chat vivo + tiles responsivos = landing com energia de produto real
+                    </h2>
+                    <p className="text-base text-slate-600">
+                      Traga vida para a dobra inicial com componentes suaves, highlights que mostram a jornada e um preview de chat pulsando sozinho.
+                      Em segundos o visitante entende briefing, aprovacao e aplicacao.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {heroHighlightItems.map((highlight) => {
+                      const Icon = highlight.icon
+                      return (
+                        <motion.div
+                          key={highlight.title}
+                          whileHover={{ y: -4, scale: 1.01 }}
+                          transition={{ duration: 0.25 }}
+                          className={`group flex h-full flex-col gap-2 rounded-2xl border border-white/70 bg-gradient-to-br ${highlight.accent} p-3 shadow-[0_22px_45px_-34px_rgba(15,23,42,0.45)]`}
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 text-slate-700 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-slate-800">{highlight.title}</div>
+                            <p className="text-xs leading-relaxed text-slate-600">{highlight.description}</p>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <Button
+                      className="group h-12 rounded-full bg-gradient-to-r from-[#2563eb] to-[#9333ea] px-6 text-sm font-semibold text-white shadow-lg shadow-[#2563eb]/30 transition-transform duration-300 hover:translate-y-[-1px] hover:from-[#1d4ed8] hover:to-[#7e22ce]"
+                    >
+                      Experimentar chat
+                      <MoveRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12 rounded-full border-slate-200 bg-white/80 px-6 text-sm font-semibold text-slate-600 transition-all duration-300 hover:border-slate-300 hover:bg-white hover:text-slate-700"
+                    >
+                      Ver integracao com Figma
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="relative flex w-full max-w-sm flex-col gap-4">
+                  <motion.div
+                    className="relative overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-[#eef1ff] via-[#e3f6ff] to-[#defaff] p-5 shadow-[0_50px_100px_-70px_rgba(59,130,246,0.5)] backdrop-blur"
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                  >
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/85 text-slate-600 shadow-sm">
+                          <Bot className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <span className="block text-[10px] font-semibold uppercase tracking-[0.32em] text-slate-400">
+                            Assistente
+                          </span>
+                          <span className="text-sm font-semibold text-slate-700">Vicgario Autopilot</span>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-500">
+                        Live
+                      </span>
+                    </div>
+
+                    <div className="mt-4">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentHeroMessage?.id}
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -16 }}
+                          transition={{ duration: 0.4 }}
+                          className={`rounded-3xl border px-5 py-4 ${heroMessageStyle}`}
+                        >
+                          <div className="mb-3 flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-2">
+                              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-semibold uppercase tracking-wide">
+                                {currentHeroMessage?.author.slice(0, 1)}
+                              </span>
+                              <span className="font-medium">{currentHeroMessage?.author}</span>
+                            </span>
+                            <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em]">
+                              {currentHeroMessage?.role === "assistant" ? "IA" : "Voce"}
+                            </span>
+                          </div>
+                          <p className="text-sm leading-relaxed">{currentHeroMessage?.text}</p>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.2)]" />
+                        Ajustando voz de marca
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {heroMessageCycle.map((message, index) => (
+                          <motion.span
+                            key={message.id}
+                            className="h-1.5 rounded-full bg-white/60"
+                            animate={{
+                              width: index === activeHeroMessage ? 22 : 8,
+                              opacity: index === activeHeroMessage ? 1 : 0.45
+                            }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {heroShowcaseItems.map((card) => {
+                      const Icon = card.icon
+                      return (
+                        <motion.div
+                          key={card.id}
+                          whileHover={{ y: -4, scale: 1.02 }}
+                          transition={{ duration: 0.25 }}
+                          className={`group flex h-full flex-col justify-between rounded-3xl border border-white/70 bg-gradient-to-br ${card.accent} p-4 shadow-[0_30px_70px_-55px_rgba(15,23,42,0.35)]`}
+                        >
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80 text-slate-700 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="mt-4 space-y-1.5">
+                            <div className="text-sm font-semibold text-slate-800">{card.title}</div>
+                            <p className="text-xs leading-relaxed text-slate-600">{card.description}</p>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.section>
 
             {/* Step 1: Choose Flow */}
             {currentStep === 1 && !showCustomization && (

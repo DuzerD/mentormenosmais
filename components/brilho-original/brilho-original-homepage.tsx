@@ -2,870 +2,429 @@
 
 import type React from "react"
 import Image from "next/image"
-import { useRef, useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Pacifico } from "next/font/google"
-import { cn } from "@/lib/utils"
 import Link from "next/link"
-import ElegantShape from "@/components/ElegantShape"
-import {
-  CheckCircle,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  BarChart3,
-  Target,
-  Users,
-  TrendingUp,
-  MessageSquareQuote,
-  Menu,
-  X,
-} from "lucide-react"
+import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ArrowRight } from "lucide-react"
 import { BrandplotCache } from "@/lib/brandplot-cache"
 import { AuthManager } from "@/lib/auth-utils"
 
-const pacifico = Pacifico({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-pacifico",
-})
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      delay: 0.2 + i * 0.15,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+}
 
-export default function BrilhoOriginalHomepage({
-  badge = "BrandPlot",
-}: {
-  badge?: string
-}) {
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<"branding" | "score" | "insights">("branding")
-  const [companyName, setCompanyName] = useState<string | null>(null)
-  const [isLogged, setIsLogged] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  const startSectionRef = useRef<HTMLDivElement>(null)
-  const benefitsSectionRef = useRef<HTMLDivElement>(null)
-  const processSectionRef = useRef<HTMLDivElement>(null)
-  const faqSectionRef = useRef<HTMLDivElement>(null)
-  const previewSectionRef = useRef<HTMLDivElement>(null)
-
-  const fadeUpVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 1,
-        delay: 0.5 + i * 0.2,
-        ease: [0.25, 0.4, 0.25, 1],
-      },
-    }),
+const heroChatMessages = [
+  {
+    id: "m1",
+    author: "Ment⊖⊕r",
+    role: "assistant",
+    text: "Oi! Vamos encontrar os pontos que seguram o crescimento da sua marca?"
+  },
+  {
+    id: "m2",
+    author: "Voce",
+    role: "user",
+    text: "Temos campanhas rodando, mas a mensagem ainda parece desconectada."
+  },
+  {
+    id: "m3",
+    author: "Ment⊖⊕r",
+    role: "assistant",
+    text: "Perfeito. Vou analisar posicionamento, promessa e tom de voz. Em minutos voce recebe um plano priorizado."
   }
-  const handleStart = () => {
-    // Se o usuário estiver logado, redireciona para o dashboard
-    if (isLogged) {
-      console.log('Usuário logado, redirecionando para dashboard...')
-      window.location.href = '/dashboard'
+]
+
+const heroTiles = [
+  {
+    icon: "insights",
+    title: "Diagnostico guiado",
+    description: "Responda poucas perguntas e veja onde sua marca perde tracao."
+  },
+  {
+    icon: "chat_bubble",
+    title: "Mensagens afinadas",
+    description: "Receba headlines e argumentos que unem marketing e vendas."
+  },
+  {
+    icon: "rocket_launch",
+    title: "Plano acionavel",
+    description: "Priorize o que muda resultado agora e siga com foco."
+  }
+]
+
+const processSteps = [
+  {
+    label: "01",
+    title: "Conte sobre a marca",
+    description: "Posicionamento, proposta de valor e canais atuais. Sem formularios longos."
+  },
+  {
+    label: "02",
+    title: "Ment⊖⊕r analisa",
+    description: "A IA cruza seus dados com benchmarks e aprendizados do nosso time."
+  },
+  {
+    label: "03",
+    title: "Receba o plano",
+    description: "Veja prioridades, mensagens-chave e materiais de apoio em minutos."
+  }
+]
+
+const faqs = [
+  {
+    question: "O diagnostico e realmente personalizado?",
+    answer: "Sim. Usamos as suas respostas e o historico Ment⊖⊕r para gerar insights alinhados ao momento da sua marca."
+  },
+  {
+    question: "Quanto tempo leva para receber o retorno?",
+    answer: "O relatorio chega instantaneamente depois das perguntas. Em menos de cinco minutos voce ja tem um plano priorizado."
+  },
+  {
+    question: "Preciso ter a marca pronta para fazer o teste?",
+    answer: "Nao. O diagnostico ajuda tanto quem esta estruturando a marca quanto empresas que precisam organizar comunicacao e oferta."
+  }
+]
+
+export default function BrilhoOriginalHomepage(): React.ReactElement {
+  const [isLogged, setIsLogged] = useState(false)
+  const [companyName, setCompanyName] = useState<string | null>(null)
+  const [activeHeroMessage, setActiveHeroMessage] = useState(0)
+  const [isHeroPaused, setIsHeroPaused] = useState(false)
+  const totalHeroMessages = heroChatMessages.length
+  const currentHeroMessage = heroChatMessages[activeHeroMessage] ?? null
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const user = AuthManager.getUser()
+    if (user && user.company) {
+      setCompanyName(user.company)
+      setIsLogged(true)
       return
     }
-    // Se não estiver logado, redireciona para a página de onboarding
-    console.log('Usuário não logado, redirecionando para onboarding...')
-    window.location.href = '/onboarding'
-  }
 
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index)
-  }
-
-  const faqs = [
-    {
-      question: "O que é o diagnóstico de marca da BrandPlot?",
-      answer:
-        "O diagnóstico de marca da BrandPlot é uma análise profunda e personalizada da sua marca, utilizando inteligência artificial e expertise em branding. Avaliamos a clareza da sua comunicação, posicionamento, público-alvo e percepção no mercado, fornecendo insights acionáveis para melhorar seu desempenho.",
-    },
-    {
-      question: "Quanto tempo leva para receber meu diagnóstico?",
-      answer:
-        "O diagnóstico é gerado instantaneamente após você responder às perguntas do questionário. Todo o processo leva aproximadamente 5-10 minutos, dependendo do tempo que você dedica a cada resposta.",
-    },
-    {
-      question: "O diagnóstico é realmente personalizado?",
-      answer:
-        "Sim! Cada diagnóstico é único e baseado exclusivamente nas suas respostas. Nossa tecnologia analisa suas informações específicas e gera recomendações personalizadas para sua marca em particular.",
-    },
-    {
-      question: "Preciso ter uma marca estabelecida para usar o serviço?",
-      answer:
-        "Não necessariamente. O diagnóstico é útil tanto para marcas estabelecidas quanto para empreendedores que estão começando. Se você está no início da jornada, o diagnóstico pode ajudar a definir direções estratégicas para sua marca.",
-    },
-    {
-      question: "Como posso implementar as recomendações do diagnóstico?",
-      answer:
-        "Após receber seu diagnóstico, você pode implementar as recomendações por conta própria ou contratar nossos serviços de consultoria para ajudá-lo no processo. Oferecemos planos específicos para diferentes necessidades e orçamentos.",
-    },
-  ]
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Verifica se há usuário realmente logado usando o AuthManager
-      const user = AuthManager.getUser()
-      
-      if (user && user.idUnico && user.company) {
-        setCompanyName(user.company)
-        setIsLogged(true)
-        return
-      }
-      
-      // Se não há usuário logado, mas há cache do questionário, apenas pega o nome
-      const cache = BrandplotCache.get()
-      if (cache && cache.companyName) {
-        setCompanyName(cache.companyName)
-      } else {
-        setCompanyName(null)
-      }
-      setIsLogged(false)
+    const cache = BrandplotCache.get()
+    if (cache?.companyName) {
+      setCompanyName(cache.companyName)
     }
   }, [])
 
-  // Fechar menu mobile quando clicar fora
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (mobileMenuOpen && !(event.target as Element).closest('header')) {
-        setMobileMenuOpen(false)
-      }
+    if (isHeroPaused || totalHeroMessages <= 1) {
+      return
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [mobileMenuOpen])
+    const intervalId = window.setInterval(() => {
+      setActiveHeroMessage((index) => (index + 1) % totalHeroMessages)
+    }, 3200)
 
-  const handleLogout = () => {
-    // Limpar dados do usuário logado usando o AuthManager
-    AuthManager.clearUser()
-    BrandplotCache.clear()
-    window.location.reload()
+    return () => window.clearInterval(intervalId)
+  }, [isHeroPaused, totalHeroMessages])
+
+  const handleStart = () => {
+    if (isLogged) {
+      window.location.href = "/dashboard"
+      return
+    }
+    window.location.href = "/onboarding"
   }
 
+  const heroMessageStyle =
+    currentHeroMessage?.role === "assistant"
+      ? "bg-gradient-to-br from-[#2563eb] to-[#4338ca] text-white border border-blue-400/30 shadow-lg shadow-blue-200/40"
+      : "bg-white text-slate-700 border border-slate-200 shadow-sm"
+
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#1a1814]">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.05] via-transparent to-amber-700/[0.05] blur-3xl" />
-
-      <div className="absolute inset-0 overflow-hidden">
-        <ElegantShape
-          delay={0.3}
-          width={600}
-          height={140}
-          rotate={12}
-          gradient="from-amber-500/[0.15]"
-          className="left-[-10%] md:left-[-5%] top-[15%] md:top-[20%]"
-        />
-
-        <ElegantShape
-          delay={0.5}
-          width={500}
-          height={120}
-          rotate={-15}
-          gradient="from-amber-700/[0.15]"
-          className="right-[-5%] md:right-[0%] top-[70%] md:top-[75%]"
-        />
-
-        <ElegantShape
-          delay={0.4}
-          width={300}
-          height={80}
-          rotate={-8}
-          gradient="from-amber-600/[0.15]"
-          className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
-        />
-
-        <ElegantShape
-          delay={0.6}
-          width={200}
-          height={60}
-          rotate={20}
-          gradient="from-amber-500/[0.15]"
-          className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
-        />
-
-        <ElegantShape
-          delay={0.7}
-          width={150}
-          height={40}
-          rotate={-25}
-          gradient="from-amber-400/[0.15]"
-          className="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
-        />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#f5f8ff] via-[#eef3ff] to-[#e2ecff] text-slate-900">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 left-1/2 h-96 w-[55rem] -translate-x-1/2 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute bottom-[-18rem] right-[-6rem] h-[28rem] w-[28rem] rounded-full bg-indigo-200/25 blur-[140px]" />
       </div>
 
-      <div className="relative z-10">        {/* Navigation */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-[#1a1814]/80 backdrop-blur-md border-b border-white/10">
-          <div className="container mx-auto px-4 md:px-6 py-4">
-            <div className="flex justify-between items-center">
-              {/* Logo */}
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-[#c8b79e]/20 flex items-center justify-center">
-                  <Image
-                    src="/images/brandplot-logo.png"
-                    alt="BrandPlot"
-                    width={24}
-                    height={24}
-                    className="rounded-full"
-                  />
-                </div>
-                <span className="text-white font-medium">BrandPlot</span>
-              </div>
-
-              {/* Desktop Navigation */}
-              <nav className="hidden lg:flex items-center gap-8">
-                <button
-                  onClick={() => scrollToSection(benefitsSectionRef)}
-                  className="text-white/60 hover:text-white transition-colors text-sm"
-                >
-                  Benefícios
-                </button>
-                <button
-                  onClick={() => scrollToSection(processSectionRef)}
-                  className="text-white/60 hover:text-white transition-colors text-sm"
-                >
-                  Como Funciona
-                </button>
-                <button
-                  onClick={() => scrollToSection(previewSectionRef)}
-                  className="text-white/60 hover:text-white transition-colors text-sm"
-                >
-                  Prévia
-                </button>
-                <button
-                  onClick={() => scrollToSection(faqSectionRef)}
-                  className="text-white/60 hover:text-white transition-colors text-sm"
-                >
-                  FAQ
-                </button>
-              </nav>
-
-              {/* Desktop Auth & CTA */}
-              <div className="hidden lg:flex items-center gap-4">
-                {!isLogged && (
-                  <Link
-                    href="/login"
-                    className="text-white/60 hover:text-white transition-colors text-sm"
-                  >
-                    Login
-                  </Link>
-                )}
-                <button
-                  onClick={handleStart}
-                  className="px-4 py-2 bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-[#1a1814]/40 hover:shadow-xl hover:shadow-[#1a1814]/50 hover:scale-105 border border-[#c8b79e]/30"
-                >
-                  {isLogged ? 'Dashboard' : 'Começar'}
-                </button>
-                {isLogged && (
-                  <button
-                    onClick={handleLogout}
-                    className="text-white/60 hover:text-[#c8b79e] transition-colors text-sm"
-                  >
-                    Sair
-                  </button>
-                )}
-              </div>
-
-              {/* Mobile Menu Button */}
-              <div className="lg:hidden flex items-center gap-3">
-                <button
-                  onClick={handleStart}
-                  className="px-3 py-2 bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-white text-xs font-medium rounded-lg transition-all duration-300"
-                >
-                  {isLogged ? 'Dashboard' : 'Começar'}
-                </button>
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 text-white/60 hover:text-white transition-colors"
-                >
-                  {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                </button>
-              </div>
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur">
+          <div className="container mx-auto flex items-center justify-between px-4 py-4 md:px-6">
+            <div className="flex items-center gap-3">
+              <Image src="/images/mentoor-wordmark.svg" alt="Mentoor" width={180} height={48} className="h-8 w-auto" priority />
+              {companyName && <span className="hidden text-sm text-slate-500 md:inline">Bem-vindo, {companyName}</span>}
             </div>
-
-            {/* Mobile Menu */}
-            {mobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="lg:hidden mt-4 py-4 border-t border-white/10"
-              >
-                <div className="flex flex-col space-y-4">
-                  <button
-                    onClick={() => {
-                      scrollToSection(benefitsSectionRef)
-                      setMobileMenuOpen(false)
-                    }}
-                    className="text-white/60 hover:text-white transition-colors text-sm text-left"
-                  >
-                    Benefícios
-                  </button>
-                  <button
-                    onClick={() => {
-                      scrollToSection(processSectionRef)
-                      setMobileMenuOpen(false)
-                    }}
-                    className="text-white/60 hover:text-white transition-colors text-sm text-left"
-                  >
-                    Como Funciona
-                  </button>
-                  <button
-                    onClick={() => {
-                      scrollToSection(previewSectionRef)
-                      setMobileMenuOpen(false)
-                    }}
-                    className="text-white/60 hover:text-white transition-colors text-sm text-left"
-                  >
-                    Prévia
-                  </button>
-                  <button
-                    onClick={() => {
-                      scrollToSection(faqSectionRef)
-                      setMobileMenuOpen(false)
-                    }}
-                    className="text-white/60 hover:text-white transition-colors text-sm text-left"
-                  >
-                    FAQ
-                  </button>
-                  
-                  {!isLogged && (
-                    <Link
-                      href="/login"
-                      className="text-white/60 hover:text-white transition-colors text-sm text-left border-t border-white/10 pt-4"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                  )}
-                  
-                  {isLogged && (
-                    <button
-                      onClick={() => {
-                        handleLogout()
-                        setMobileMenuOpen(false)
-                      }}
-                      className="text-white/60 hover:text-[#c8b79e] transition-colors text-sm text-left border-t border-white/10 pt-4"
-                    >
-                      Sair
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </header>        {/* Hero Section */}
-        <section className="relative pt-28 md:pt-32 pb-16 md:pb-24">
-          <div className="container mx-auto px-4 md:px-6 min-h-[calc(100vh-7rem)] md:min-h-[80vh] flex flex-col justify-center">
-            <div className="max-w-4xl mx-auto text-center">
-              <motion.div
-                custom={0}
-                variants={fadeUpVariants}
-                initial="hidden"
-                animate="visible"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6 md:mb-8 lg:mb-12"
-              >
-                <Image
-                  src="/images/brandplot-logo.png"
-                  alt="BrandPlot"
-                  width={20}
-                  height={20}
-                  className="rounded-full md:w-6 md:h-6"
-                />
-                <span className="text-xs md:text-sm text-white/60 tracking-wide">{badge}</span>
-              </motion.div>
-
-              <motion.div custom={1} variants={fadeUpVariants} initial="hidden" animate="visible">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 lg:mb-8 tracking-tight leading-tight">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
-                    Transforme sua
-                  </span>
-                  <br />
-                  <span
-                    className={cn(
-                      "bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-[#c8b79e] to-amber-200 pr-2 md:pr-4",
-                      pacifico.className,
-                    )}
-                  >
-                    Marca
-                  </span>
-                </h1>
-              </motion.div>
-
-              <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/40 mb-6 md:mb-8 leading-relaxed font-light tracking-wide max-w-2xl mx-auto px-2">
-                  {isLogged && companyName 
-                    ? `Bem-vindo de volta! Continue explorando o potencial da ${companyName} com nossas ferramentas avançadas de branding.`
-                    : "Descubra o verdadeiro potencial da sua marca com nosso diagnóstico personalizado. Impulsione seu negócio com insights poderosos e estratégias acionáveis."
-                  }
-                </p>
-              </motion.div>
-
-              <motion.div custom={3} variants={fadeUpVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 md:gap-4 px-2">
-                  <button
-                    onClick={handleStart}
-                    className="group relative px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-white font-semibold rounded-xl transition-all duration-300 w-full sm:w-auto shadow-lg shadow-[#1a1814]/40 hover:shadow-xl hover:shadow-[#1a1814]/50 hover:scale-105 border border-[#c8b79e]/30 flex items-center justify-center gap-2"
-                  >
-                    <span className="relative z-10 text-sm md:text-base lg:text-lg">
-                      {isLogged ? 'Acessar Dashboard' : 'Começar Diagnóstico Gratuito'}
-                    </span>
-                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#1a1814] to-transparent" />
-        </section>        {/* Benefits Section */}
-        <section ref={benefitsSectionRef} className="py-12 md:py-16 lg:py-24 relative">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-12 lg:mb-16">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#c8b79e]/10 text-[#c8b79e] text-sm font-medium mb-4">
-                Benefícios
-              </span>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 px-4">
-                Por que fazer um diagnóstico de marca?
-              </h2>
-              <p className="text-white/60 max-w-2xl mx-auto text-sm md:text-base px-4">
-                Descubra como nossa análise profunda pode transformar sua marca e impulsionar seu negócio com
-                insights acionáveis.
-              </p>
-            </div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-              {/* Benefit 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 lg:p-8"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#c8b79e]/10 flex items-center justify-center mb-4 md:mb-6">
-                  <Target className="w-5 h-5 md:w-6 md:h-6 text-[#c8b79e]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Clareza de Posicionamento</h3>
-                <p className="text-white/60 text-sm md:text-base">
-                  Entenda exatamente onde sua marca se posiciona no mercado e como se diferencia da concorrência,
-                  criando uma proposta de valor única.
-                </p>
-              </motion.div>
-
-              {/* Benefit 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 lg:p-8"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#c8b79e]/10 flex items-center justify-center mb-4 md:mb-6">
-                  <Users className="w-5 h-5 md:w-6 md:h-6 text-[#c8b79e]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Conexão com o Público</h3>
-                <p className="text-white/60 text-sm md:text-base">
-                  Identifique seu público ideal e descubra como criar mensagens que ressoam emocionalmente,
-                  construindo relacionamentos mais fortes.
-                </p>
-              </motion.div>
-
-              {/* Benefit 3 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 lg:p-8"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#c8b79e]/10 flex items-center justify-center mb-4 md:mb-6">
-                  <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-[#c8b79e]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Estratégia Acionável</h3>
-                <p className="text-white/60 text-sm md:text-base">
-                  Receba recomendações práticas e específicas que você pode implementar imediatamente para melhorar
-                  a percepção da sua marca.
-                </p>
-              </motion.div>
-
-              {/* Benefit 4 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 lg:p-8"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#c8b79e]/10 flex items-center justify-center mb-4 md:mb-6">
-                  <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-[#c8b79e]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Crescimento Acelerado</h3>
-                <p className="text-white/60 text-sm md:text-base">
-                  Elimine obstáculos invisíveis que estão limitando seu crescimento e descubra oportunidades
-                  inexploradas para expandir sua marca.
-                </p>
-              </motion.div>
-
-              {/* Benefit 5 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 lg:p-8"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#c8b79e]/10 flex items-center justify-center mb-4 md:mb-6">
-                  <MessageSquareQuote className="w-5 h-5 md:w-6 md:h-6 text-[#c8b79e]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Narrativa Poderosa</h3>
-                <p className="text-white/60 text-sm md:text-base">
-                  Desenvolva uma história de marca convincente que comunica sua essência e cria uma conexão
-                  emocional duradoura com seus clientes.
-                </p>
-              </motion.div>
-
-              {/* Benefit 6 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 lg:p-8 sm:col-span-2 lg:col-span-1"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#c8b79e]/10 flex items-center justify-center mb-4 md:mb-6">
-                  <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-[#c8b79e]" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Vantagem Competitiva</h3>
-                <p className="text-white/60 text-sm md:text-base">
-                  Destaque-se em um mercado saturado com um posicionamento claro e diferenciado que ressoa com seu
-                  público-alvo ideal.
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </section>        {/* Process Section */}
-        <section ref={processSectionRef} className="py-12 md:py-16 lg:py-24 relative bg-[#1a1814]/50">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-12 lg:mb-16">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#c8b79e]/10 text-[#c8b79e] text-sm font-medium mb-4">
-                Processo
-              </span>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 px-4">Como funciona o diagnóstico</h2>
-              <p className="text-white/60 max-w-2xl mx-auto text-sm md:text-base px-4">
-                Um processo simples e rápido para transformar sua marca em apenas 3 passos
-              </p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-3 md:gap-8 lg:gap-12">
-              {/* Step 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#c8b79e]/20 flex items-center justify-center mx-auto mb-4 md:mb-6 relative">
-                  <span className="text-xl md:text-2xl font-bold text-[#c8b79e]">1</span>
-                  <div className="absolute -right-3 -top-3 md:-right-4 md:-top-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#c8b79e]/10 animate-pulse" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Responda o Questionário</h3>
-                <p className="text-white/60 text-sm md:text-base px-2">
-                  Responda 9 perguntas estratégicas sobre sua marca, seus objetivos e seu público-alvo. Leva apenas
-                  5 minutos.
-                </p>
-              </motion.div>
-
-              {/* Step 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#c8b79e]/20 flex items-center justify-center mx-auto mb-4 md:mb-6 relative">
-                  <span className="text-xl md:text-2xl font-bold text-[#c8b79e]">2</span>
-                  <div className="absolute -right-3 -top-3 md:-right-4 md:-top-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#c8b79e]/10 animate-pulse" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Análise Inteligente</h3>
-                <p className="text-white/60 text-sm md:text-base px-2">
-                  Nossa IA analisa suas respostas e gera um diagnóstico personalizado com insights específicos para
-                  sua marca.
-                </p>
-              </motion.div>
-
-              {/* Step 3 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#c8b79e]/20 flex items-center justify-center mx-auto mb-4 md:mb-6 relative">
-                  <span className="text-xl md:text-2xl font-bold text-[#c8b79e]">3</span>
-                  <div className="absolute -right-3 -top-3 md:-right-4 md:-top-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#c8b79e]/10 animate-pulse" />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Implemente as Estratégias</h3>
-                <p className="text-white/60 text-sm md:text-base px-2">
-                  Receba um plano de ação detalhado com recomendações práticas para transformar sua marca e acelerar
-                  seu crescimento.
-                </p>
-              </motion.div>
-            </div>
-
-            <div className="mt-8 md:mt-12 lg:mt-16 text-center">
+            <nav className="flex items-center gap-3 text-sm font-medium text-slate-600">
+              <Link href="#beneficios" className="transition hover:text-blue-600">Beneficios</Link>
+              <Link href="#processo" className="transition hover:text-blue-600">Como funciona</Link>
+              <Link href="#faq" className="transition hover:text-blue-600">FAQ</Link>
+              {!isLogged && (
+                <Link href="/login" className="inline-flex items-center rounded-full border border-blue-500 px-4 py-1.5 text-blue-600 transition hover:bg-blue-50">
+                  Entrar
+                </Link>
+              )}
               <button
                 onClick={handleStart}
-                className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-[#1a1814]/40 hover:shadow-xl hover:shadow-[#1a1814]/50 hover:scale-105 border border-[#c8b79e]/30 text-sm md:text-base"
+                className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2 text-white shadow-lg shadow-indigo-200 transition hover:shadow-xl"
               >
-                <span>Começar Agora</span>
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+                {isLogged ? "Voltar ao dashboard" : "Comecar agora"}
               </button>
-            </div>
+            </nav>
           </div>
-        </section>        {/* Preview Section */}
-        <section ref={previewSectionRef} className="py-12 md:py-16 lg:py-24 relative">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-12 lg:mb-16">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#c8b79e]/10 text-[#c8b79e] text-sm font-medium mb-4">
-                Prévia do Diagnóstico
-              </span>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 px-4">
-                Veja o que você vai receber
-              </h2>
-              <p className="text-white/60 max-w-2xl mx-auto text-sm md:text-base px-4">
-                Seu diagnóstico personalizado inclui análise profunda, pontuação e insights acionáveis para transformar sua marca.
-              </p>
-            </div>
+        </header>
 
-            <div className="flex justify-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-8 lg:p-12 shadow-xl w-full max-w-3xl mx-auto"
-              >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#c8b79e]/20 flex items-center justify-center">
-                      <Image
-                        src="/images/brandplot-logo.png"
-                        alt="BrandPlot"
-                        width={12}
-                        height={12}
-                        className="rounded-full md:w-4 md:h-4"
-                      />
+        <main className="flex-1">
+          <section className="container mx-auto px-4 py-16 md:px-6 md:py-24">
+            <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_380px]">
+              <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
+                <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-8 flex flex-col items-center gap-3 lg:items-start">
+                  <Image src="/images/mentoor-wordmark.svg" alt="Mentoor" width={320} height={100} className="h-auto w-64 md:w-72" />
+                  <span className="rounded-full border border-slate-200 bg-white/80 px-4 py-1 text-sm font-medium text-slate-600">Marca em ordem</span>
+                </motion.div>
+
+                <motion.h1 custom={1} variants={fadeUp} initial="hidden" animate="visible" className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+                  Descubra o que falta para a sua marca vender mais, fazendo menos.
+                </motion.h1>
+
+                <motion.p custom={2} variants={fadeUp} initial="hidden" animate="visible" className="mt-6 text-base text-slate-600 md:text-lg">
+                  O diagnostico Ment⊖⊕r analisa posicionamento, comunicacao e experiencia para revelar oportunidades reais. Receba um plano acionavel com priorizacao clara e materiais de apoio criados para acelerar a sua marca.
+                </motion.p>
+
+                <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible" className="mt-10 flex flex-wrap justify-center gap-3 lg:justify-start">
+                  <button
+                    onClick={handleStart}
+                    className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-3 text-base font-semibold text-white shadow-xl shadow-indigo-200 transition hover:scale-[1.02] hover:shadow-2xl"
+                  >
+                    {isLogged ? "Ir para o dashboard" : "Comecar diagnostico gratuito"}
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </button>
+                  <Link
+                    href="#processo"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+                  >
+                    Ver como funciona
+                  </Link>
+                </motion.div>
+
+                <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible" className="mt-12 grid gap-4 sm:grid-cols-3">
+                  {heroTiles.map((tile, index) => (
+                    <div key={tile.title} className="rounded-3xl border border-slate-200/60 bg-white/80 p-5 text-left shadow-sm backdrop-blur">
+                      <div className="text-sm font-semibold text-blue-500">0{index + 1}</div>
+                      <div className="mt-2 text-base font-semibold text-slate-900">{tile.title}</div>
+                      <p className="mt-2 text-sm text-slate-600">{tile.description}</p>
                     </div>
-                    <span className="text-xs md:text-sm text-white/60">Diagnóstico Completo</span>
-                  </div>
+                  ))}
+                </motion.div>
+              </div>
 
-                  <div className="flex gap-1 w-full sm:w-auto">
-                    <button
-                      onClick={() => setActiveTab("branding")}
-                      className={`flex-1 sm:flex-none px-2 md:px-3 py-1 text-xs rounded-md transition-colors ${activeTab === "branding" ? "bg-[#c8b79e]/20 text-[#c8b79e]" : "text-white/40 hover:text-white/60"}`}
-                    >
-                      Análise
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("score")}
-                      className={`flex-1 sm:flex-none px-2 md:px-3 py-1 text-xs rounded-md transition-colors ${activeTab === "score" ? "bg-[#c8b79e]/20 text-[#c8b79e]" : "text-white/40 hover:text-white/60"}`}
-                    >
-                      Score
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("insights")}
-                      className={`flex-1 sm:flex-none px-2 md:px-3 py-1 text-xs rounded-md transition-colors ${activeTab === "insights" ? "bg-[#c8b79e]/20 text-[#c8b79e]" : "text-white/40 hover:text-white/60"}`}
-                    >
-                      Ações
-                    </button>
-                  </div>
+              <motion.div
+                custom={1}
+                variants={fadeUp}
+                initial="hidden"
+                animate="visible"
+                onMouseEnter={() => setIsHeroPaused(true)}
+                onMouseLeave={() => setIsHeroPaused(false)}
+                className="relative overflow-hidden rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_35px_70px_-45px_rgba(30,64,175,0.5)] backdrop-blur"
+              >
+                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                  <span className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500/15 text-blue-600">AI</span>
+                    Ment⊖⊕r Live
+                  </span>
+                  <span className="flex items-center gap-2 text-emerald-500">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                    Online
+                  </span>
                 </div>
 
-                <div className="space-y-4 min-h-[280px] md:min-h-[320px]">
-                  {activeTab === "branding" && (
-                    <div className="space-y-4">
-                      <div className="text-center mb-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-                          <span className="text-sm text-white/60">
-                            Diagnóstico de <span className="text-[#c8b79e] font-medium">Sua Empresa</span>
+                <div className="mt-6">
+                  <AnimatePresence mode="wait">
+                    {currentHeroMessage && (
+                      <motion.div
+                        key={currentHeroMessage.id}
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -18 }}
+                        transition={{ duration: 0.35 }}
+                        className={`${heroMessageStyle} rounded-3xl px-5 py-4`}
+                      >
+                        <div className="mb-3 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 font-semibold uppercase text-white/90">
+                              {currentHeroMessage.author.slice(0, 1)}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {currentHeroMessage.author}
+                            </span>
+                          </div>
+                          <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em]">
+                            {currentHeroMessage.role === "assistant" ? "IA" : "Voce"}
                           </span>
                         </div>
-                      </div>
-
-                      <h3 className="text-lg font-bold text-white mb-3">🎯 Essência da Marca</h3>
-                      <p className="text-white/70 text-sm leading-relaxed">
-                        Sua marca nasceu de uma motivação genuína e possui elementos distintivos interessantes. A
-                        essência está presente, mas precisa ser comunicada de forma mais clara e consistente.
-                      </p>
-
-                      <h3 className="text-lg font-bold text-white mb-3 mt-6">🧬 Promessa Central</h3>
-                      <div className="bg-white/[0.05] border border-white/[0.1] rounded-lg p-4">
-                        <p className="text-white/80 text-sm italic">
-                          "Sua marca existe para transformar a experiência do cliente de forma única e memorável."
+                        <p className="text-sm leading-relaxed">
+                          {currentHeroMessage.text}
                         </p>
-                      </div>
-                      <p className="text-white/70 text-sm mt-2">
-                        A promessa está bem definida conceitualmente, mas precisa ser traduzida em benefícios tangíveis.
-                      </p>
-                    </div>
-                  )}
-
-                  {activeTab === "score" && (
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <div className="relative w-32 h-32 flex items-center justify-center mb-6">
-                        <svg className="w-full h-full absolute transform -rotate-90" viewBox="0 0 100 100">
-                          <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2520" strokeWidth="8" />
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="45"
-                            fill="none"
-                            stroke="#c8b79e"
-                            strokeWidth="8"
-                            strokeDasharray="283"
-                            strokeDashoffset="81"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="text-center">
-                          <span className="text-4xl font-bold text-[#c8b79e]">72</span>
-                          <div className="text-white/60 text-sm font-medium">/100</div>
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-white mb-4">Nota de Clareza & Emoção</h3>
-                      <p className="text-white/70 text-sm text-center max-w-md leading-relaxed">
-                        Sua marca demonstra potencial sólido, mas há oportunidades significativas para maior clareza na comunicação e conexão emocional mais profunda.
-                      </p>
-                    </div>
-                  )}
-
-                  {activeTab === "insights" && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-white mb-4">🚀 Próximos Passos</h3>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-[#c8b79e] mt-2 shrink-0"></div>
-                          <div>
-                            <p className="text-white font-medium text-sm">Refinar Posicionamento</p>
-                            <p className="text-white/60 text-xs">Definir claramente o que torna sua marca única</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-[#c8b79e] mt-2 shrink-0"></div>
-                          <div>
-                            <p className="text-white font-medium text-sm">Fortalecer Identidade Visual</p>
-                            <p className="text-white/60 text-xs">Alinhar elementos visuais com a personalidade</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-[#c8b79e] mt-2 shrink-0"></div>
-                          <div>
-                            <p className="text-white font-medium text-sm">Criar Consistência</p>
-                            <p className="text-white/60 text-xs">Padronizar comunicação em todos os pontos</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 p-4 bg-gradient-to-r from-[#c8b79e]/10 to-[#b09e85]/10 border border-[#c8b79e]/20 rounded-lg">
-                        <p className="text-white/80 text-sm text-center">
-                          <strong className="text-[#c8b79e]">Pronto para implementar?</strong><br />
-                          Fale com um especialista para acelerar sua transformação.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>        {/* FAQ Section */}
-        <section ref={faqSectionRef} className="py-12 md:py-16 lg:py-24 relative bg-[#1a1814]/30">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8 md:mb-12 lg:mb-16">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#c8b79e]/10 text-[#c8b79e] text-sm font-medium mb-4">
-                FAQ
-              </span>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 px-4">Perguntas Frequentes</h2>
-              <p className="text-white/60 max-w-2xl mx-auto text-sm md:text-base px-4">
-                Tire suas dúvidas sobre nosso diagnóstico de marca
-              </p>
-            </div>
-
-            <div className="max-w-3xl mx-auto">
-              {faqs.map((faq, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="mb-3 md:mb-4"
-                >
-                  <button
-                    onClick={() => toggleFaq(index)}
-                    className="w-full text-left bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-4 md:p-6 hover:bg-white/[0.04] transition-all duration-300"
-                  >
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-base md:text-lg font-semibold text-white pr-4 md:pr-8 leading-tight">{faq.question}</h3>
-                      {openFaq === index ? (
-                        <ChevronUp className="w-5 h-5 text-[#c8b79e] flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-[#c8b79e] flex-shrink-0 mt-0.5" />
-                      )}
-                    </div>
-                    {openFaq === index && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-white/[0.08]"
-                      >
-                        <p className="text-white/60 leading-relaxed text-sm md:text-base">{faq.answer}</p>
                       </motion.div>
                     )}
-                  </button>
-                </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.2)]" />
+                    Ajustando narrativa
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {heroChatMessages.map((message, index) => (
+                      <motion.span
+                        key={message.id}
+                        className="h-1.5 rounded-full bg-blue-500/30"
+                        animate={{
+                          width: index === activeHeroMessage ? 18 : 8,
+                          opacity: index === activeHeroMessage ? 1 : 0.35,
+                        }}
+                        transition={{ duration: 0.25 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <motion.div
+                  className="absolute -top-6 right-6 h-20 w-20 rounded-full bg-blue-200/30 blur-3xl"
+                  animate={{ y: [0, -10, 0], opacity: [0.35, 0.5, 0.35] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute -bottom-8 left-8 h-24 w-24 rounded-full bg-indigo-200/25 blur-3xl"
+                  animate={{ y: [0, 12, 0], opacity: [0.3, 0.5, 0.3] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+                />
+              </motion.div>
+            </div>
+          </section>
+
+          <section id="beneficios" className="pb-24 pt-12">
+            <div className="container mx-auto px-4 md:px-6">
+              <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mx-auto mb-12 max-w-3xl text-center">
+                <h2 className="text-3xl font-bold text-slate-900">Organize a marca com clareza</h2>
+                <p className="mt-3 text-base text-slate-600">
+                  A Ment⊖⊕r combina inteligencia de marketing e roteiro de comunicacao para reduzir desperdicio e acelerar conversao.
+                </p>
+              </motion.div>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                {heroTiles.map((tile) => (
+                  <motion.div
+                    key={tile.title}
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-500">
+                      {tile.icon}
+                    </span>
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-slate-900">{tile.title}</h3>
+                      <p className="text-sm text-slate-600">{tile.description}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section id="processo" className="bg-white/70 py-24">
+            <div className="container mx-auto px-4 md:px-6">
+              <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mx-auto mb-12 max-w-3xl text-center">
+                <h2 className="text-3xl font-bold text-slate-900">Como funciona o diagnostico Mentoor</h2>
+                <p className="mt-3 text-base text-slate-600">Tres passos para alinhar posicionamento, promessa e mensagem.</p>
+              </motion.div>
+              <div className="grid gap-8 md:grid-cols-3">
+                {processSteps.map((step, index) => (
+                  <motion.div
+                    key={step.label}
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    custom={index}
+                    className="rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm"
+                  >
+                    <span className="text-sm font-semibold text-indigo-500">{step.label}</span>
+                    <h3 className="mt-3 text-lg font-semibold text-slate-900">{step.title}</h3>
+                    <p className="mt-3 text-sm text-slate-600">{step.description}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="py-24 text-center">
+            <div className="mx-auto max-w-3xl px-4">
+              <motion.h2 variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-3xl font-bold text-slate-900">
+                Pronto para colocar a marca em ordem?
+              </motion.h2>
+              <motion.p variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-4 text-base text-slate-600">
+                O diagnostico Ment⊖⊕r mostra onde focar e entrega materiais para sua equipe agir agora.
+              </motion.p>
+              <motion.button
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                onClick={handleStart}
+                className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-8 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-indigo-500"
+              >
+                Comecar agora
+                <ArrowRight className="h-5 w-5" />
+              </motion.button>
+            </div>
+          </section>
+
+          <section id="faq" className="container mx-auto px-4 pb-24 md:px-6">
+              <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mx-auto mb-10 max-w-3xl text-center">
+              <h2 className="text-3xl font-bold text-slate-900">Perguntas frequentes</h2>
+              <p className="mt-3 text-base text-slate-600">Tire duvidas rapidas antes de iniciar o diagnostico Mentoor.</p>
+            </motion.div>
+            <div className="mx-auto max-w-3xl space-y-4">
+              {faqs.map((faq, index) => (
+                <motion.details
+                  key={faq.question}
+                  custom={index}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="group rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm"
+                >
+                  <summary className="cursor-pointer text-base font-semibold text-slate-900 marker:hidden">
+                    {faq.question}
+                  </summary>
+                  <p className="mt-2 text-sm text-slate-600">{faq.answer}</p>
+                </motion.details>
               ))}
             </div>
-          </div>
-        </section>        {/* Footer */}
-        <footer className="py-6 md:py-8 lg:py-12 border-t border-white/[0.08]">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#c8b79e]/20 flex items-center justify-center">
-                  <Image
-                    src="/images/brandplot-logo.png"
-                    alt="BrandPlot"
-                    width={16}
-                    height={16}
-                    className="rounded-full md:w-5 md:h-5"
-                  />
-                </div>
-                <span className="text-white font-medium text-sm md:text-base">BrandPlot</span>
-              </div>
-              <p className="text-white/40 text-xs md:text-sm text-center">
-                © 2024 BrandPlot. Todos os direitos reservados.
-              </p>
+          </section>
+        </main>
+
+        <footer className="border-t border-slate-200 bg-white/80 py-6 backdrop-blur">
+          <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 text-sm text-slate-500 md:flex-row md:px-6">
+            <div className="flex items-center gap-2">
+              <Image src="/images/mentoor-wordmark.svg" alt="Mentoor" width={120} height={32} className="h-6 w-auto" />
+              <span className="hidden text-slate-500 md:inline">Ment⊖⊕r</span>
             </div>
+            <p>(c) 2024 Ment⊖⊕r. Todos os direitos reservados.</p>
           </div>
         </footer>
       </div>
     </div>
   )
 }
+
+
+

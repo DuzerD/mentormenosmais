@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vicgario Content Machine</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+    
+    :root {
+      /* Paleta de cores do projeto */
+      --bg-dark: #1a1814;
+      --gold-light: #c8b79e;
+      --gold-medium: #b09e85;
+      --gold-hover: #d0c0a8;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --amber-700: #b45309;
+      
+      /* Cores de feedback */
+      --status-high-bg: rgba(239, 68, 68, 0.2);
+      --status-high-text: #fca5a5;
+      --status-high-border: rgba(239, 68, 68, 0.3);
+      --status-medium-bg: rgba(234, 179, 8, 0.2);
+      --status-medium-text: #fde047;
+      --status-medium-border: rgba(234, 179, 8, 0.3);
+      --status-low-bg: rgba(34, 197, 94, 0.2);
+      --status-low-text: #86efac;
+      --status-low-border: rgba(34, 197, 94, 0.3);
+      --status-default-bg: rgba(107, 114, 128, 0.2);
+      --status-default-text: #d1d5db;
+      --status-default-border: rgba(107, 114, 128, 0.3);
+      
+      /* Gradientes modernos com paleta do projeto */
+      --gradient-primary: linear-gradient(135deg, var(--amber-700) 0%, var(--amber-600) 25%, var(--amber-500) 75%, var(--amber-400) 100%);
+      --gradient-secondary: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-medium) 50%, var(--gold-hover) 100%);
+      --gradient-accent: linear-gradient(135deg, var(--gold-hover) 0%, var(--gold-light) 50%, var(--gold-medium) 100%);
+      --gradient-bg: linear-gradient(135deg, #1a1814 0%, #1f1e1a 25%, #24231e 75%, #2a2823 100%);
+      --gradient-glass: linear-gradient(135deg, rgba(200, 183, 158, 0.15) 0%, rgba(176, 158, 133, 0.1) 100%);
+      
+      /* Efeitos glassmorphism com paleta escura */
+      --glass-bg: rgba(200, 183, 158, 0.1);
+      --glass-bg-strong: rgba(200, 183, 158, 0.15);
+      --glass-border: rgba(200, 183, 158, 0.2);
+      --glass-shadow: 0 8px 32px rgba(26, 24, 20, 0.4);
+      
+      /* Sombras modernas com tema escuro */
+      --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+      --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.7);
+      
+      /* Cores de texto para tema escuro */
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.8);
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --text-white: #ffffff;
+      
+      /* Border radius moderno */
+      --radius-xs: 6px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 24px;
+      --radius-full: 9999px;
+      
+      /* Transições suaves */
+      --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      
+      /* Espaçamentos */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--gradient-bg);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* Background animado premium com paleta escura */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 25% 75%, rgba(251, 191, 36, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 75% 25%, rgba(217, 119, 6, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(200, 183, 158, 0.1) 0%, transparent 60%);
+      animation: backgroundFlow 30s ease-in-out infinite;
+      z-index: -2;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 100px,
+          rgba(200, 183, 158, 0.03) 101px,
+          rgba(200, 183, 158, 0.03) 102px
+        );
+      z-index: -1;
+    }
+
+    @keyframes backgroundFlow {
+      0%, 100% { 
+        transform: translate(-2%, -2%) rotate(0deg) scale(1); 
+        opacity: 1;
+      }
+      25% { 
+        transform: translate(1%, 1%) rotate(0.5deg) scale(1.02); 
+        opacity: 0.8;
+      }
+      50% { 
+        transform: translate(2%, 2%) rotate(1deg) scale(1.04); 
+        opacity: 0.9;
+      }
+      75% { 
+        transform: translate(-1%, 1%) rotate(0.5deg) scale(1.02); 
+        opacity: 0.85;
+      }
+    }
+
+    .container {
+      max-width: 460px;
+      width: 100%;
+      background: var(--gradient-glass);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      padding: var(--space-2xl);
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+      animation: containerEntry 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes containerEntry {
+      0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.92);
+        filter: blur(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+    /* Borda animada superior */
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+      animation: borderGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes borderGlow {
+      0% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+      100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+    }
+
+    /* Efeito de brilho sutil */
+    .container::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent 30%, rgba(200, 183, 158, 0.1) 50%, transparent 70%);
+      animation: shimmer 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    h1 {
+      font-family: 'Outfit', 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: var(--space-xl);
+      text-align: center;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      text-shadow: 0 2px 10px rgba(139, 69, 19, 0.15);
+      animation: titleGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: brightness(1); }
+      100% { filter: brightness(1.1); }
+    }
+
+    .step {
+      display: none;
+      animation: stepFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    @keyframes stepFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(15px);
+        filter: blur(5px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    .step-button {
+      width: 100%;
+      background: var(--gradient-primary);
+      border: none;
+      padding: var(--space-lg) var(--space-xl);
+      margin-bottom: var(--space-md);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-white);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      font-family: 'Inter', sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    .step-button:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: var(--shadow-lg);
+      filter: brightness(1.1);
+    }
+
+    .step-button:active {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: var(--shadow-md);
+      transition: var(--transition-fast);
+    }
+
+    /* Efeito ripple nos botões */
+    .step-button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    .step-button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    /* Inputs modernos para tema escuro */
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: rgba(26, 24, 20, 0.6);
+      color: var(--text-primary);
+      border: 2px solid rgba(200, 183, 158, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      resize: none;
+      outline: none;
+      margin-bottom: var(--space-md);
+      transition: var(--transition-normal);
+      backdrop-filter: blur(10px);
+      line-height: 1.5;
+      box-shadow: var(--shadow-xs);
+    }
+
+    textarea {
+      height: 140px;
+      font-family: inherit;
+    }
+
+    textarea:focus, input:focus {
+      border-color: var(--amber-400);
+      background: rgba(26, 24, 20, 0.8);
+      box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1), var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    textarea::placeholder, input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Botões secundários */
+    button {
+      width: 100%;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--gradient-secondary);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-top: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-normal);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: -0.01em;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      filter: brightness(1.05);
+    }
+
+    button:active {
+      transform: translateY(0);
+      transition: var(--transition-fast);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      filter: grayscale(0.3);
+    }
+
+    .checkbox {
+      margin: var(--space-md) 0 var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .checkbox:hover {
+      color: var(--text-primary);
+    }
+
+    .checkbox input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--primary);
+      border-radius: var(--radius-xs);
+      transition: var(--transition-fast);
+    }
+
+    /* Drop zone melhorado para tema escuro */
+    .drop-zone {
+      padding: var(--space-xl);
+      border: 2px dashed rgba(200, 183, 158, 0.4);
+      border-radius: var(--radius-lg);
+      background: rgba(26, 24, 20, 0.4);
+      text-align: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      margin-top: var(--space-md);
+      transition: var(--transition-normal);
+      position: relative;
+      overflow: hidden;
+      font-weight: 500;
+    }
+
+    .drop-zone:hover {
+      border-color: rgba(200, 183, 158, 0.6);
+      background: rgba(26, 24, 20, 0.6);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .drop-zone.dragover {
+      border-color: var(--amber-400);
+      background: rgba(26, 24, 20, 0.8);
+      box-shadow: var(--shadow-md);
+      transform: scale(1.02);
+    }
+
+    /* Preview melhorado */
+    .preview {
+      font-size: 13px;
+      margin-top: var(--space-lg);
+      background: var(--gradient-glass);
+      backdrop-filter: blur(15px);
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      max-height: 200px;
+      overflow-y: auto;
+      line-height: 1.6;
+      box-shadow: var(--shadow-sm);
+      font-weight: 400;
+    }
+
+    .preview::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .preview::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-xs);
+    }
+
+    .preview::-webkit-scrollbar-thumb {
+      background: rgba(200, 183, 158, 0.3);
+      border-radius: var(--radius-xs);
+      transition: var(--transition-fast);
+    }
+
+    .preview::-webkit-scrollbar-thumb:hover {
+      background: rgba(200, 183, 158, 0.5);
+    }
+
+    /* Histórico */
+    .historico {
+      margin-top: var(--space-xl);
+    }
+
+    .historico h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: var(--space-md);
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .historico-item {
+      background: var(--gradient-glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-md);
+      font-size: 13px;
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .historico-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .historico-item small {
+      display: block;
+      opacity: 0.7;
+      margin-bottom: var(--space-sm);
+      font-weight: 400;
+    }
+
+    .historico-item button {
+      width: auto;
+      margin-top: var(--space-sm);
+      margin-right: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(139, 69, 19, 0.2);
+    }
+
+    /* Credits */
+    .credits {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-top: var(--space-xl);
+      text-align: center;
+      font-weight: 400;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Botão voltar premium */
+    #voltar-step {
+      display: none;
+      margin-bottom: var(--space-md);
+      font-size: 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      background: var(--gradient-glass);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+      font-weight: 600;
+    }
+
+    #voltar-step:hover {
+      background: rgba(200, 183, 158, 0.2);
+      transform: translateX(-3px) scale(1.05);
+      box-shadow: var(--shadow-md);
+      color: var(--amber-400);
+    }
+
+    /* Select moderno para tema escuro */
+    select {
+      width: 100%;
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--radius-md);
+      border: 2px solid rgba(200, 183, 158, 0.3);
+      background: rgba(26, 24, 20, 0.6);
+      color: var(--text-primary);
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: var(--space-md);
+      cursor: pointer;
+      transition: var(--transition-normal);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-xs);
+    }
+
+    select:focus {
+      border-color: var(--amber-400);
+      background: rgba(26, 24, 20, 0.8);
+      box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1), var(--shadow-sm);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    /* Labels melhorados */
+    label {
+      display: block;
+      margin-bottom: var(--space-sm);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Input color premium para tema escuro */
+    input[type="color"] {
+      border: 2px solid rgba(200, 183, 158, 0.3);
+      border-radius: var(--radius-md);
+      background: rgba(26, 24, 20, 0.6);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-xs);
+    }
+
+    input[type="color"]:hover {
+      border-color: var(--amber-400);
+      box-shadow: var(--shadow-sm);
+      transform: scale(1.02);
+    }
+
+    /* Botão especial de estilo para tema escuro */
+    #btn-estilo {
+      background: var(--gradient-accent) !important;
+      color: var(--text-primary) !important;
+      font-weight: 700 !important;
+      border: 2px solid rgba(200, 183, 158, 0.3) !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    }
+
+    #btn-estilo:hover {
+      transform: translateY(-3px) scale(1.02) !important;
+      box-shadow: var(--shadow-lg) !important;
+      border-color: var(--amber-400) !important;
+    }
+
+    /* Modal ultra moderno */
+    #modal-container {
+      backdrop-filter: blur(12px) saturate(150%);
+      background: rgba(45, 24, 16, 0.6);
+    }
+
+    #modal-content {
+      background: var(--gradient-glass);
+      backdrop-filter: blur(25px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      animation: modalEntry 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalEntry {
+      0% {
+        opacity: 0;
+        transform: scale(0.85) translateY(30px);
+        filter: blur(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    /* Zona de upload de imagens premium para tema escuro */
+    #image-dropzone {
+      background: rgba(26, 24, 20, 0.4);
+      border: 2px dashed rgba(200, 183, 158, 0.4);
+      transition: var(--transition-normal);
+      backdrop-filter: blur(10px);
+    }
+
+    #image-dropzone:hover {
+      border-color: rgba(200, 183, 158, 0.6);
+      background: rgba(26, 24, 20, 0.6);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #image-preview img {
+      border-radius: var(--radius-md);
+      border: 2px solid rgba(200, 183, 158, 0.3);
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-xs);
+    }
+
+    #image-preview img:hover {
+      transform: scale(1.08) rotate(2deg);
+      border-color: var(--amber-400);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Animações de loading premium */
+    @keyframes pulse {
+      0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+      }
+      50% { 
+        opacity: 0.7; 
+        transform: scale(1.02);
+      }
+    }
+
+    .loading {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+         /* Micro-interações */
+     @keyframes clickBounce {
+       0% { transform: scale(1); }
+       50% { transform: scale(0.95); }
+       100% { transform: scale(1); }
+     }
+
+     .click-bounce {
+       animation: clickBounce 0.2s ease-in-out;
+     }
+
+     /* Animação de shake para validação */
+     @keyframes shake {
+       0%, 100% { transform: translateX(0); }
+       10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+       20%, 40%, 60%, 80% { transform: translateX(8px); }
+     }
+
+     /* Animação de loading spinner */
+     @keyframes spin {
+       0% { transform: rotate(0deg); }
+       100% { transform: rotate(360deg); }
+     }
+
+           /* Estado de sucesso */
+      .success-state {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+        color: white !important;
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3) !important;
+      }
+
+    /* Responsividade aprimorada */
+    @media (max-width: 480px) {
+      .container {
+        margin: var(--space-md);
+        padding: var(--space-xl);
+        max-width: calc(100vw - 32px);
+        border-radius: var(--radius-xl);
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .step-button {
+        padding: var(--space-lg) var(--space-lg);
+        font-size: 15px;
+      }
+
+      #voltar-step {
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    /* Scrollbar customizada global para tema escuro */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(26, 24, 20, 0.3);
+      border-radius: var(--radius-xs);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(200, 183, 158, 0.3);
+      border-radius: var(--radius-xs);
+      transition: var(--transition-fast);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(200, 183, 158, 0.5);
+    }
+
+    /* Melhorias nos botões de limpeza para tema escuro */
+    button[id^="limpar-"] {
+      background: rgba(26, 24, 20, 0.6) !important;
+      color: var(--text-secondary) !important;
+      border: 1px solid rgba(200, 183, 158, 0.3) !important;
+      font-weight: 600 !important;
+      font-size: 16px !important;
+      transition: var(--transition-normal) !important;
+    }
+
+    button[id^="limpar-"]:hover {
+      background: rgba(26, 24, 20, 0.8) !important;
+      color: var(--amber-400) !important;
+      border-color: var(--amber-400) !important;
+      transform: scale(1.05) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Botão voltar (só aparece no step 2) -->
+    <div id="voltar-step">←</div>
+
+    <!-- Step 1: Tela inicial -->
+    <div id="step-1" class="step active">
+      <h1>O que você quer fazer?</h1>
+      <button class="step-button" id="btn-ia">
+        <span style="font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</span>
+        <span>Criar tema com IA</span>
+      </button>
+      <button class="step-button" id="btn-manual">
+        <span style="font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">📝</span>
+        <span>Já tenho tema</span>
+      </button>
+    </div>
+
+    <!-- Step 2: Conteúdo dinâmico -->
+    <div id="step-2" class="step"></div>
+
+    <div class="credits">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px;">
+        <span style="font-size: 16px;">✨</span>
+        <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Powered by Vicgario</span>
+        <span style="font-size: 16px;">✨</span>
+      </div>
+      <div style="font-size: 10px; opacity: 0.5;">Content Creation • Made with ❤️</div>
+    </div>
+  </div>
+
+  <div id="modal-container" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000088;z-index:999;justify-content:center;align-items:center;">
+    <div id="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-height:80vh;overflow:auto;max-width:600px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <div id="modal-text"></div>
+      <br>
+      <button id="fechar-modal" style="background:#6e4b3a;color:white;padding:8px 16px;border:none;border-radius:8px;">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    const step1 = document.getElementById("step-1");
+    const step2 = document.getElementById("step-2");
+    const voltarStep = document.getElementById("voltar-step");
+
+    // Adiciona efeitos de micro-interação
+    function addClickBounce(element) {
+      element.classList.add("click-bounce");
+      setTimeout(() => element.classList.remove("click-bounce"), 200);
+    }
+
+    // Melhora na transição entre steps
+    function showStep(targetStep, sourceStep) {
+      sourceStep.style.opacity = "0";
+      sourceStep.style.transform = "translateY(20px)";
+      
+      setTimeout(() => {
+        sourceStep.classList.remove("active");
+        targetStep.classList.add("active");
+        targetStep.style.opacity = "1";
+        targetStep.style.transform = "translateY(0)";
+      }, 150);
+    }
+
+    document.getElementById("btn-ia").addEventListener("click", (e) => {
+      addClickBounce(e.target);
+      voltarStep.style.display = "flex";
+      showStep(step2, step1);
+      setTimeout(() => showIAFlow(), 200);
+    });
+
+    document.getElementById("btn-manual").addEventListener("click", (e) => {
+      addClickBounce(e.target);
+      voltarStep.style.display = "flex";
+      showStep(step2, step1);
+      setTimeout(() => showManualFlow(), 200);
+    });
+
+    voltarStep.addEventListener("click", (e) => {
+      addClickBounce(e.target);
+      voltarStep.style.display = "none";
+      showStep(step1, step2);
+    });
+
+    function showIAFlow() {
+      step2.innerHTML = `
+        <h1>Crie seu tema</h1>
+        <textarea id="tema-input" placeholder="Ex: Como usar IA para criar conteúdo eficiente"></textarea>
+        <button id="gerar-com-ia">🎯 Gerar carrossel com IA</button>
+        <div class="preview" id="preview-ia" style="display:none;"></div>
+        <button id="aplicar-ia" style="display:none;">Aplicar agora</button>
+      `;
+
+      document.getElementById("gerar-com-ia").addEventListener("click", async () => {
+        try {
+          console.log('🎬 Plugin: Botão clicado, iniciando processo...');
+          
+          const tema = document.getElementById("tema-input").value.trim();
+          console.log('📝 Plugin: Tema capturado:', tema);
+        
+        if (!tema) {
+          console.log('❌ Plugin: Tema vazio, aplicando efeito de shake');
+          // Efeito de shake para campos vazios
+          const input = document.getElementById("tema-input");
+          input.style.animation = "shake 0.5s ease-in-out";
+          input.style.borderColor = "#ef4444";
+          input.style.boxShadow = "0 0 0 4px rgba(239, 68, 68, 0.1)";
+          setTimeout(() => {
+            input.style.animation = "";
+            input.style.borderColor = "";
+            input.style.boxShadow = "";
+          }, 500);
+          return;
+        }
+
+        console.log('🔘 Plugin: Preparando botão de loading...');
+        const btn = document.getElementById("gerar-com-ia");
+        const originalText = btn.innerText;
+        console.log('💾 Plugin: Texto original do botão salvo:', originalText);
+        
+        // Efeito de loading avançado
+        btn.innerHTML = `
+          <span style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+            <span style="
+              width: 16px; 
+              height: 16px; 
+              border: 2px solid rgba(255,255,255,0.3); 
+              border-top: 2px solid white; 
+              border-radius: 50%; 
+              animation: spin 1s linear infinite;
+            "></span>
+            Gerando conteúdo...
+          </span>
+        `;
+        btn.disabled = true;
+        btn.style.cursor = "not-allowed";
+
+        try {
+          console.log('🚀 Plugin: Iniciando try block...');
+          console.log('📦 Plugin: Preparando payload...', {
+            tipo: "carrossel",
+            conteudo: tema,
+            configuracao: {
+              modelo: "gpt-3.5-turbo",
+              temperatura: 0.7,
+              maxTokens: 1000
+            }
+          });
+          
+          console.log('🌐 Plugin: Fazendo requisição para API...');
+          const res = await fetch("https://ia.vicgar.io/api/plugin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              tipo: "carrossel",
+              conteudo: tema,
+              configuracao: {
+                modelo: "gpt-3.5-turbo",
+                temperatura: 0.7,
+                maxTokens: 1000
+              }
+            })
+          });
+          
+          console.log('📡 Plugin: Resposta da API recebida', res.status, res.statusText);
+          
+          const json = await res.json();
+          console.log('📦 Plugin: JSON parseado', json);
+          
+          if (!json.sucesso) {
+            throw new Error(json.erro || "Erro ao gerar conteúdo");
+          }
+          
+          const blocos = json.resultado?.blocos || [];
+          const textoCompleto = json.resultado?.textoCompleto || "";
+          console.log('🎯 Plugin: Blocos extraídos', blocos.length, blocos);
+          console.log('📋 Plugin: Texto completo da API:', textoCompleto);
+
+          if (blocos.length) {
+            console.log('✅ Plugin: Exibindo preview com', blocos.length, 'blocos');
+            const preview = document.getElementById("preview-ia");
+            preview.innerHTML = blocos.map((b, i) => `<div><b>texto ${i + 1} - ${b}</b></div>`).join("");
+            preview.style.display = "block";
+
+            const aplicarBtn = document.getElementById("aplicar-ia");
+            aplicarBtn.style.display = "block";
+
+            aplicarBtn.onclick = () => {
+  // Usar o textoCompleto que já vem formatado da API
+  const conteudoFormatado = textoCompleto || blocos.map((texto, index) => `texto ${index + 1} - ${texto}`).join("\n");
+  console.log('📝 Plugin: Conteúdo que será aplicado:', conteudoFormatado);
+  console.log('📋 Plugin: Blocos originais:', blocos);
+  
+  parent.postMessage({
+    pluginMessage: {
+      type: "apply-text",
+      content: conteudoFormatado,
+      options: { onlySelected: false }
+    }
+  }, "*");
+
+  if (!document.getElementById("btn-estilo")) {
+    const btnEstilo = document.createElement("button");
+    btnEstilo.id = "btn-estilo";
+    btnEstilo.textContent = "🎨 Editar estilos e aparência";
+    btnEstilo.style.marginTop = "14px";
+    btnEstilo.style.backgroundColor = "#d2a95b";
+    btnEstilo.style.color = "#000";
+    btnEstilo.style.fontWeight = "bold";
+    // Passar os blocos já formatados para a customização
+    const blocosFormatados = textoCompleto ? textoCompleto.split('\n') : blocos.map((texto, index) => `texto ${index + 1} - ${texto}`);
+    btnEstilo.onclick = () => showCustomizationStep(blocosFormatados);
+    aplicarBtn.insertAdjacentElement("afterend", btnEstilo);
+  }
+};
+
+          }
+        } catch (err) {
+          console.error('💥 Plugin: ERRO CAPTURADO!');
+          console.error('Tipo do erro:', typeof err);
+          console.error('Nome do erro:', err.name);
+          console.error('Mensagem do erro:', err.message);
+          console.error('Stack trace:', err.stack);
+          console.error('Objeto completo do erro:', err);
+          
+          // Estado de erro
+          btn.innerHTML = `
+            <span style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+              ❌ Erro ao gerar: ${err.message || 'Erro desconhecido'}
+            </span>
+          `;
+          btn.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+          
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = "";
+            btn.style.cursor = "";
+            btn.disabled = false;
+          }, 3000);
+          return;
+        }
+
+        // Estado de sucesso
+        btn.innerHTML = `
+          <span style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+            ✅ Conteúdo gerado!
+          </span>
+        `;
+        btn.classList.add("success-state");
+        
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove("success-state");
+          btn.style.cursor = "";
+          btn.disabled = false;
+        }, 1500);
+        
+        } catch (globalError) {
+          console.error('💥 Plugin: ERRO GLOBAL CAPTURADO!');
+          console.error('Erro antes mesmo da requisição:', globalError);
+          alert('Erro interno do plugin: ' + globalError.message);
+        }
+      });
+    }
+
+    function showManualFlow() {
+      step2.innerHTML = `
+        <textarea id="input-text" placeholder="Cole seu texto aqui..."></textarea>
+
+        <label class="checkbox">
+          <input type="checkbox" id="only-selected">
+          Aplicar apenas na seleção
+        </label>
+
+        <button id="apply-text">Aplicar Texto</button>
+
+        <div class="drop-zone" id="drop-zone">
+          Arraste um .txt aqui ou clique para selecionar
+          <input type="file" id="file-upload" accept=".txt,.csv" style="display: none" />
+        </div>
+
+        <div class="preview" id="preview-blocos" style="display:none;"></div>
+        <button id="apply-detected" style="display:none;">Aplicar agora</button>
+
+        <div class="historico" id="historico-colagens"></div>
+      `;
+
+      const input = document.getElementById("input-text");
+      const applyText = document.getElementById("apply-text");
+      const onlySelected = document.getElementById("only-selected");
+      const dropZone = document.getElementById("drop-zone");
+      const fileUpload = document.getElementById("file-upload");
+      const previewDetected = document.getElementById("preview-blocos");
+      const applyDetected = document.getElementById("apply-detected");
+      const historicoEl = document.getElementById("historico-colagens");
+
+      let blocosDetectados = [];
+      let historicoColagens = [];
+
+      applyText.addEventListener("click", () => {
+  const blocos = parseTexto(input.value);
+  if (blocos.length > 0) {
+    salvarNoHistorico(blocos);
+  }
+
+  parent.postMessage({
+    pluginMessage: {
+      type: "apply-text",
+      content: input.value,
+      options: {
+        onlySelected: onlySelected.checked
+      }
+    }
+  }, "*");
+
+  // Adiciona botão para abrir Step 3 (customização)
+  if (!document.getElementById("btn-estilo")) {
+    const btnEstilo = document.createElement("button");
+    btnEstilo.id = "btn-estilo";
+    btnEstilo.textContent = "🎨 Editar estilos e aparência";
+    btnEstilo.style.marginTop = "14px";
+    btnEstilo.style.backgroundColor = "#d2a95b";
+    btnEstilo.style.color = "#000";
+    btnEstilo.style.fontWeight = "bold";
+    btnEstilo.onclick = () => showCustomizationStep(parseTexto(input.value));
+    applyText.insertAdjacentElement("afterend", btnEstilo);
+  }
+});
+
+
+      function parseTexto(txt) {
+        return txt.split(/\n+/)
+          .map(l => l.replace(/^texto\s*\d+\s*-\s*/, '').trim())
+          .filter(Boolean);
+      }
+
+      function mostrarPreviewBlocos(blocos) {
+        blocosDetectados = blocos;
+
+        if (blocos.length > 0) {
+          previewDetected.style.display = "block";
+          applyDetected.style.display = "block";
+          previewDetected.innerHTML = blocos.map((t, i) =>
+            `<div><b>texto${i + 1}</b> → ${t}</div>`
+          ).join("");
+        } else {
+          previewDetected.style.display = "none";
+          applyDetected.style.display = "none";
+        }
+      }
+
+      function salvarNoHistorico(blocos) {
+        historicoColagens.unshift(blocos);
+        if (historicoColagens.length > 3) historicoColagens.pop();
+        renderHistorico();
+      }
+
+      function renderHistorico() {
+        if (historicoColagens.length === 0) {
+          historicoEl.innerHTML = "";
+          return;
+        }
+
+        historicoEl.innerHTML = "<h3 style='margin-bottom:10px;'>🕓 Histórico de colagens</h3>" +
+          historicoColagens.map((blocos, i) => `
+            <div class="historico-item">
+              <strong>${blocos.length} blocos</strong><br>
+    <small>${blocos[0] ? blocos[0].split(" ").slice(0, 3).join(" ") : ""}...</small>
+              <button class="ver-preview" data-index="${i}">👁 Ver</button>
+              <button onclick="aplicarBlocosDireto(${i})">⚡ Aplicar</button>
+            </div>
+          `).join("");
+      }
+
+      function aplicarBlocosDireto(i) {
+        const blocos = historicoColagens[i];
+        if (!blocos) return;
+        parent.postMessage({
+          pluginMessage: {
+            type: "apply-text",
+            content: blocos.map((texto, index) => `texto ${index + 1} - ${texto}`).join("\n"),
+            options: {
+              onlySelected: onlySelected.checked
+            }
+          }
+        }, "*");
+      }
+
+      document.getElementById("input-text").addEventListener("paste", (e) => {
+  e.preventDefault(); // 🚫 impede o navegador de colar sozinho
+  const texto = e.clipboardData.getData("text/plain");
+  e.target.value = texto;
+});
+
+      function handleTextoDoArquivo(texto) {
+  const blocos = parseTexto(texto);
+  if (blocos.length > 0) {
+    mostrarPreviewBlocos(blocos);
+    salvarNoHistorico(blocos);
+    applyText.style.display = "block"; // mostra botão se quiser aplicar depois
+  }
+}
+
+
+      dropZone.addEventListener("click", () => fileUpload.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+      });
+      dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        const reader = new FileReader();
+        reader.onload = e => handleTextoDoArquivo(e.target.result);
+        reader.readAsText(file);
+      });
+      fileUpload.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = e => handleTextoDoArquivo(e.target.result);
+        reader.readAsText(file);
+      });
+
+      applyDetected.addEventListener("click", () => {
+  parent.postMessage({
+    pluginMessage: {
+      type: "apply-text",
+      content: blocosDetectados.map((texto, index) => `texto ${index + 1} - ${texto}`).join("\n"),
+      options: {
+        onlySelected: onlySelected.checked
+      }
+    }
+  }, "*");
+
+  // Adiciona botão para abrir Step 3 (customização)
+  if (!document.getElementById("btn-estilo")) {
+    const btnEstilo = document.createElement("button");
+    btnEstilo.id = "btn-estilo";
+    btnEstilo.textContent = "🎨 Editar estilos e aparência";
+    btnEstilo.style.marginTop = "14px";
+    btnEstilo.style.backgroundColor = "#d2a95b";
+    btnEstilo.style.color = "#000";
+    btnEstilo.style.fontWeight = "bold";
+
+    btnEstilo.onclick = () => showCustomizationStep(blocosDetectados);
+    applyDetected.insertAdjacentElement("afterend", btnEstilo);
+  }
+});
+
+      window.historicoColagens = historicoColagens;
+    }
+
+function showCustomizationStep(blocos) {
+
+  const customizationHTML = `
+    <h1>Customizar Blocos</h1>
+
+    <label for="frame-mae" style="color: #fff;">Selecionar frame principal</label>
+    <select id="frame-mae" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid rgba(200, 183, 158, 0.3);background:rgba(26, 24, 20, 0.6);color:#fff;">
+      <option value="">Carregando...</option>
+    </select>
+
+    <label for="frame-filho" style="color: #fff;">Selecionar frame interno para aplicar fundo</label>
+    <select id="frame-filho" style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1px solid rgba(200, 183, 158, 0.3);background:rgba(26, 24, 20, 0.6);color:#fff;">
+      <option value="">Selecione um frame principal acima</option>
+    </select>
+
+    <div style="margin-bottom: 12px;">
+  <label for="color-texto" style="display: block; margin-bottom: 6px; color: #fff;">Cor do texto <span style="opacity: .6">(clique para escolher)</span></label>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <input type="color" id="color-texto" value="#000000" style="flex-grow: 1; height: 38px; border-radius: 8px; border: 1px solid rgba(200, 183, 158, 0.3); background: rgba(26, 24, 20, 0.6); cursor: pointer;" />
+    <button id="limpar-cor-texto" title="Limpar cor" style="margin-top:-1px; width: 40px; height: 38px; border-radius: 8px; background: rgba(200, 183, 158, 0.2); border: 1px solid rgba(200, 183, 158, 0.3); color: #fff; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center;">×</button>
+  </div>
+</div>
+
+    
+    <label style="color: #fff;">Fonte</label>
+    <select id="font-family" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid rgba(200, 183, 158, 0.3);background:rgba(26, 24, 20, 0.6);color:#fff;">
+      <option value="">Carregando fontes do Figma...</option>
+    </select>
+
+    <label style="color: #fff;">Peso</label>
+    <select id="font-weight" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid rgba(200, 183, 158, 0.3);background:rgba(26, 24, 20, 0.6);color:#fff;">
+      <option value="Regular">Regular</option>
+      <option value="SemiBold" selected>SemiBold</option>
+      <option value="Bold">Bold</option>
+    </select>
+
+    <label style="color: #fff;">Tamanho</label>
+    <input type="number" id="font-size" value="75" style="width:100%;margin-bottom:14px;padding:8px;border-radius:8px;border:1px solid rgba(200, 183, 158, 0.3);background:rgba(26, 24, 20, 0.6);color:#fff;" />
+
+    <div style="margin-bottom: 12px;">
+  <label for="color-fundo" style="display: block; margin-bottom: 6px; color: #fff;">Cor de fundo <span style="opacity: .6">(clique para escolher)</span></label>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <input type="color" id="color-fundo" value="#ffffff" style="flex-grow: 1; height: 38px; border-radius: 8px; border: 1px solid rgba(200, 183, 158, 0.3); background: rgba(26, 24, 20, 0.6); cursor: pointer;" />
+    <button id="limpar-cor-fundo" title="Limpar cor" style="margin-top:-1px; width: 40px; height: 38px; border-radius: 8px; background: rgba(200, 183, 158, 0.2); border: 1px solid rgba(200, 183, 158, 0.3); color: #fff; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center;">×</button>
+  </div>
+</div>
+
+
+
+
+    <label for="image-upload" style="color: #fff;">Substituir imagens</label>
+    <div id="image-dropzone" style="border:2px dashed rgba(200, 183, 158, 0.4);border-radius:8px;background:rgba(26, 24, 20, 0.4);text-align:center;padding:16px;color:#fff;cursor:pointer;margin-bottom:12px;">
+      📁 Subir imagens (arraste ou clique)
+      <input id="image-upload" type="file" multiple accept="image/*" style="display:none;" />
+    </div>
+    <div id="image-preview" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+
+    <button onclick="applyAllCustomizations()">🚀 Aplicar Estilos, Fundo e Imagens</button>
+  `;
+
+  step2.innerHTML = customizationHTML;
+  // Configurar botões de limpeza
+  const btnLimparTexto = document.getElementById("limpar-cor-texto");
+  const inputTexto = document.getElementById("color-texto");
+  btnLimparTexto.onclick = () => {
+    inputTexto.value = "#000000";
+  };
+
+  const btnLimparFundo = document.getElementById("limpar-cor-fundo");
+  const inputFundo = document.getElementById("color-fundo");
+  btnLimparFundo.onclick = () => {
+    inputFundo.value = "#ffffff";
+  };
+  step2.classList.add("active");
+  step1.classList.remove("active");
+  voltarStep.style.display = "block";
+
+  // Solicita frames e fontes do Figma
+  parent.postMessage({ pluginMessage: { type: "get-frames-mae" } }, "*");
+  parent.postMessage({ pluginMessage: { type: "get-fonts" } }, "*");
+
+  const dropzone = document.getElementById("image-dropzone");
+  const inputFile = document.getElementById("image-upload");
+  dropzone.onclick = () => inputFile.click();
+
+inputFile.onchange = () => {
+  const files = Array.from(inputFile.files);
+  const previewZone = document.getElementById("image-preview");
+  const readers = files.map(file => {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  });
+
+  Promise.all(readers).then(results => {
+    previewZone.innerHTML = results.map(src => `<img src="${src}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">`).join("");
+  });
+};
+
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+
+    if (msg?.type === "font-list") {
+      const fontSelect = document.getElementById("font-family");
+      fontSelect.innerHTML = 
+        `<option value="">Selecione uma fonte...</option>` +
+        msg.fonts.map(font => `<option value="${font}" ${font === 'Inter' ? 'selected' : ''}>${font}</option>`).join("");
+    } else if (msg?.type === "frames-mae-list") {
+      const frameMaeSelect = document.getElementById("frame-mae");
+      frameMaeSelect.innerHTML =
+        `<option value="">Selecione...</option>` +
+        msg.frames.map(name => `<option value="${name}">${name}</option>`).join("");
+    } else if (msg?.type === "children-list") {
+      const frameFilho = document.getElementById("frame-filho");
+      frameFilho.innerHTML = msg.children.map(f => `<option value="${f}">${f}</option>`).join("");
+    }
+  };
+
+
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "frame-mae") {
+      const frameMaeValue = e.target.value;
+      parent.postMessage({ pluginMessage: { type: "get-children", frameName: frameMaeValue } }, "*");
+    }
+  });
+
+  window.applyAllCustomizations = () => {
+    console.log('🎨 Plugin UI: Iniciando aplicação de customizações...');
+    
+    const font = document.getElementById('font-family').value;
+    const weight = document.getElementById('font-weight').value;
+    const size = +document.getElementById('font-size').value;
+    const colorTexto = document.getElementById('color-texto').value;
+    const colorFundo = document.getElementById('color-fundo').value;
+    const frameMaeValue = document.getElementById('frame-mae').value;
+    const frameFilhoValue = document.getElementById('frame-filho').value;
+    const imageFiles = inputFile.files;
+
+    console.log('📋 Plugin UI: Valores capturados:', {
+      font, weight, size, colorTexto, colorFundo, 
+      frameMaeValue, frameFilhoValue, 
+      imageFilesCount: imageFiles.length
+    });
+
+    // Verificar se há mudanças de texto para aplicar
+    const temMudancasTexto = (font && font !== '') || 
+                           (size && size > 0 && size !== 75) || 
+                           (colorTexto && colorTexto !== '#000000');
+
+    // Aplicar estilo de texto apenas se há mudanças
+    if (temMudancasTexto) {
+      console.log('📝 Plugin UI: Enviando edit-text-style...');
+      parent.postMessage({
+        pluginMessage: {
+          type: 'edit-text-style',
+          font: font && font !== '' ? font : null,
+          weight: weight || null,
+          size: (size && size > 0 && size !== 75) ? size : null,
+          color: (colorTexto && colorTexto !== '#000000') ? colorTexto : null,
+          frameName: frameFilhoValue,
+          parentName: frameMaeValue
+        }
+      }, '*');
+    } else {
+      console.log('⚠️ Plugin UI: Nenhuma mudança de texto detectada');
+    }
+
+    // Aplicar cor de fundo apenas se especificada e diferente da cor padrão
+    if (colorFundo && colorFundo !== '#ffffff') {
+      if (frameFilhoValue && frameMaeValue) {
+        console.log('🖼️ Plugin UI: Enviando edit-frame...');
+        parent.postMessage({
+          pluginMessage: {
+            type: 'edit-frame',
+            frameName: frameFilhoValue,
+            parentName: frameMaeValue,
+            color: colorFundo
+          }
+        }, '*');
+      } else {
+        console.warn('⚠️ Plugin UI: Frame não selecionado para aplicar fundo');
+        const mensagem = !frameMaeValue ? 'Frame principal não selecionado' :
+                        !frameFilhoValue ? 'Frame interno não selecionado' :
+                        'Frames não selecionados';
+        
+        // Mostrar mensagem na interface
+        const container = document.querySelector('.container');
+        let msgElement = document.getElementById('frame-warning');
+        if (!msgElement) {
+          msgElement = document.createElement('div');
+          msgElement.id = 'frame-warning';
+          msgElement.style.cssText = `
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            text-align: center;
+            font-weight: 600;
+            z-index: 1000;
+          `;
+          container.appendChild(msgElement);
+        }
+        msgElement.textContent = `⚠️ ${mensagem}`;
+        setTimeout(() => {
+          if (msgElement && msgElement.parentNode) {
+            msgElement.parentNode.removeChild(msgElement);
+          }
+        }, 3000);
+      }
+    }
+
+    // Aplicar imagens se existirem
+    if (imageFiles.length > 0) {
+      console.log('🖼️ Plugin UI: Processando', imageFiles.length, 'imagens...');
+      const readers = Array.from(imageFiles).map(file => {
+        return new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(readers).then(results => {
+        console.log('📸 Plugin UI: Imagens processadas, enviando replace-images...');
+        const previewZone = document.getElementById("image-preview");
+        previewZone.innerHTML = results.map(src => `<img src="${src}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">`).join("");
+
+        parent.postMessage({ 
+          pluginMessage: {
+            type: 'replace-images',
+            frameName: frameFilhoValue,
+            parentName: frameMaeValue,
+            images: results
+          } 
+        }, '*');
+      });
+    }
+    
+    console.log('✅ Plugin UI: Todas as mensagens enviadas para o Figma');
+  };
+}
+
+
+window.showCustomizationStep = showCustomizationStep;
+
+// Adiciona efeitos globais de micro-interação
+document.addEventListener('DOMContentLoaded', () => {
+  // Efeito de focus suave em todos os inputs
+  document.addEventListener('focusin', (e) => {
+    if (e.target && e.target.matches && e.target.matches('input, textarea, select')) {
+      e.target.style.transform = 'translateY(-1px) scale(1.01)';
+      e.target.style.transition = 'all 0.2s ease';
+    }
+  });
+
+  document.addEventListener('focusout', (e) => {
+    if (e.target && e.target.matches && e.target.matches('input, textarea, select')) {
+      e.target.style.transform = '';
+    }
+  });
+
+  // Efeito de hover em botões
+  document.addEventListener('mouseenter', (e) => {
+    if (e.target && e.target.matches && e.target.matches('button:not(:disabled)')) {
+      e.target.style.transform = 'translateY(-2px) scale(1.02)';
+    }
+  }, true);
+
+  document.addEventListener('mouseleave', (e) => {
+    if (e.target && e.target.matches && e.target.matches('button')) {
+      e.target.style.transform = '';
+    }
+  }, true);
+
+  // Efeito de typing para textareas
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.matches && e.target.matches('textarea')) {
+      e.target.style.boxShadow = '0 0 0 4px rgba(251, 191, 36, 0.1), 0 8px 25px rgba(251, 191, 36, 0.15)';
+      
+      clearTimeout(e.target.typingTimeout);
+      e.target.typingTimeout = setTimeout(() => {
+        e.target.style.boxShadow = '';
+      }, 1000);
+    }
+  });
+
+  // Efeito de sucesso em checkboxes
+  document.addEventListener('change', (e) => {
+    if (e.target.type === 'checkbox') {
+      if (e.target.checked) {
+        e.target.style.transform = 'scale(1.1)';
+        setTimeout(() => e.target.style.transform = '', 200);
+      }
+    }
+  });
+});
+</script>
+
+<script>
+function abrirModal(html) {
+  document.getElementById("modal-text").innerHTML = html;
+  document.getElementById("modal-container").style.display = "flex";
+}
+document.getElementById("fechar-modal").onclick = () => {
+  document.getElementById("modal-container").style.display = "none";
+};
+
+// Delegação de evento segura para botões "👁 Ver"
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.matches && e.target.matches(".ver-preview")) {
+    const i = e.target.dataset.index;
+    const blocos = window.historicoColagens[i];
+    const html = blocos.map((b, j) => `<div><strong>Bloco ${j + 1}:</strong> ${b}</div>`).join("<hr>");
+    abrirModal(html);
+  }
+});
+
+// ============ COMUNICAÇÃO COM PÁGINA WEB ============
+// Sistema robusto de comunicação (postMessage + fallback seguro)
+
+// Variáveis globais para armazenamento em memória
+window.webCommands = window.webCommands || [];
+window.isLocalStorageAvailable = null; // null = não testado, true/false = resultado do teste
+window.pluginMemoryStore = new Map(); // Store alternativo em memória
+
+// Função para verificar localStorage de forma mais robusta
+function checkLocalStorageSupport() {
+  if (window.isLocalStorageAvailable !== null) {
+    return window.isLocalStorageAvailable;
+  }
+
+  try {
+    // Verificações básicas
+    if (typeof Storage === 'undefined' || !window.localStorage) {
+      console.log('ℹ️ Plugin UI: Storage não suportado pelo navegador');
+      window.isLocalStorageAvailable = false;
+      return false;
+    }
+
+    // Teste real de funcionamento
+    const testKey = '__figma_plugin_test__';
+    const testValue = 'test_' + Date.now();
+    
+    localStorage.setItem(testKey, testValue);
+    const retrieved = localStorage.getItem(testKey);
+    localStorage.removeItem(testKey);
+    
+    if (retrieved === testValue) {
+      console.log('✅ Plugin UI: localStorage funcionando normalmente');
+      window.isLocalStorageAvailable = true;
+      return true;
+    } else {
+      console.log('⚠️ Plugin UI: localStorage não retornou valor correto');
+      window.isLocalStorageAvailable = false;
+      return false;
+    }
+    
+  } catch (error) {
+    console.log('ℹ️ Plugin UI: localStorage não disponível -', error.name + ':', error.message);
+    console.log('ℹ️ Plugin UI: Usando armazenamento em memória como alternativa');
+    window.isLocalStorageAvailable = false;
+    return false;
+  }
+}
+
+// Funções seguras para armazenamento
+function safeSetItem(key, value) {
+  try {
+    // Armazenar em memória sempre
+    window.pluginMemoryStore.set(key, value);
+    
+    // Tentar localStorage apenas se disponível
+    if (checkLocalStorageSupport()) {
+      localStorage.setItem(key, value);
+      return true;
+    }
+  } catch (error) {
+    console.log(`⚠️ Plugin UI: Erro ao salvar ${key}:`, error.message);
+    window.isLocalStorageAvailable = false;
+  }
+  return false;
+}
+
+function safeGetItem(key) {
+  try {
+    // Verificar memória primeiro (mais confiável)
+    if (window.pluginMemoryStore.has(key)) {
+      return window.pluginMemoryStore.get(key);
+    }
+    
+    // Tentar localStorage apenas se disponível
+    if (checkLocalStorageSupport()) {
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        // Sincronizar com memória
+        window.pluginMemoryStore.set(key, value);
+        return value;
+      }
+    }
+  } catch (error) {
+    console.log(`⚠️ Plugin UI: Erro ao ler ${key}:`, error.message);
+    window.isLocalStorageAvailable = false;
+  }
+  return null;
+}
+
+function safeRemoveItem(key) {
+  try {
+    // Limpar da memória
+    window.pluginMemoryStore.delete(key);
+    
+    // Tentar localStorage apenas se disponível
+    if (checkLocalStorageSupport()) {
+      localStorage.removeItem(key);
+    }
+  } catch (error) {
+    console.log(`⚠️ Plugin UI: Erro ao remover ${key}:`, error.message);
+    window.isLocalStorageAvailable = false;
+  }
+}
+
+// Verificar suporte inicial
+checkLocalStorageSupport();
+
+// Escutar comandos diretos da página web via postMessage
+window.addEventListener('message', function(event) {
+  // Verificar se é um comando da página web
+  if (event.data && event.data.source === 'vicgario-web') {
+    console.log('📬 Plugin UI: Comando recebido via postMessage:', event.data);
+    
+    try {
+      // Armazenar comando na memória (SEMPRE funciona)
+      const commandWithTimestamp = {
+        ...event.data,
+        timestamp: Date.now(),
+        receivedAt: new Date().toISOString()
+      };
+      
+      window.webCommands.push(commandWithTimestamp);
+      console.log('💾 Plugin UI: Comando armazenado na memória');
+      
+      // Tentar armazenar também no localStorage (se disponível)
+      const success = safeSetItem('figma-plugin-command', JSON.stringify(commandWithTimestamp));
+      if (success) {
+        console.log('💾 Plugin UI: Comando também salvo no localStorage');
+      }
+      
+      // Notificar o plugin principal sobre o novo comando
+      parent.postMessage({
+        pluginMessage: {
+          type: 'new-web-command',
+          command: commandWithTimestamp
+        }
+      }, '*');
+      
+    } catch (error) {
+      console.error('❌ Plugin UI: Erro ao processar comando da web:', error);
+    }
+  }
+});
+
+// Escutar mensagens do plugin principal
+window.onmessage = function(event) {
+  const msg = event.data.pluginMessage;
+  
+  // Verifica comando web pendente
+  if (msg && msg.type === 'check-web-command') {
+    try {
+      let command = null;
+      
+      // Priorizar comandos na memória (mais confiável)
+      if (window.webCommands && window.webCommands.length > 0) {
+        command = window.webCommands.shift();
+        console.log('🎯 Plugin UI: Comando encontrado na memória:', command);
+      }
+      // Fallback: verificar armazenamento seguro
+      else {
+        const pendingCommand = safeGetItem('figma-plugin-command');
+        if (pendingCommand) {
+          try {
+            command = JSON.parse(pendingCommand);
+            console.log('🎯 Plugin UI: Comando encontrado no armazenamento:', command);
+          } catch (parseError) {
+            console.log('⚠️ Plugin UI: Erro ao fazer parse do comando:', parseError);
+          }
+        }
+      }
+      
+      // Responder ao plugin principal
+      parent.postMessage({
+        pluginMessage: {
+          type: 'web-command-response',
+          command: command,
+          storageInfo: {
+            memoryCommands: window.webCommands.length,
+            localStorageAvailable: window.isLocalStorageAvailable,
+            memoryStoreSize: window.pluginMemoryStore.size
+          }
+        }
+      }, '*');
+      
+    } catch (error) {
+      console.error('❌ Plugin UI: Erro ao verificar comando web:', error);
+      parent.postMessage({
+        pluginMessage: {
+          type: 'web-command-response',
+          command: null,
+          error: error.message
+        }
+      }, '*');
+    }
+  }
+  
+  // Limpar comando web após processamento
+  else if (msg && msg.type === 'clear-web-command') {
+    try {
+      // Limpar comandos da memória
+      if (window.webCommands) {
+        const clearedCount = window.webCommands.length;
+        window.webCommands = [];
+        console.log(`🗑️ Plugin UI: ${clearedCount} comandos limpos da memória`);
+      }
+      
+      // Limpar armazenamento seguro
+      safeRemoveItem('figma-plugin-command');
+      console.log('🗑️ Plugin UI: Comando limpo do armazenamento');
+      
+    } catch (error) {
+      console.error('❌ Plugin UI: Erro ao limpar comandos:', error);
+    }
+  }
+  
+  // Notificar página web sobre sucesso
+  else if (msg && msg.type === 'notify-web-success') {
+    try {
+      const statusData = JSON.stringify({
+        lastProcessed: Date.now(),
+        success: true,
+        command: msg.command,
+        timestamp: msg.timestamp
+      });
+      
+      // Tentar salvar status (se possível)
+      safeSetItem('figma-plugin-status', statusData);
+      
+      // Notificar página web via postMessage (SEMPRE funciona)
+      window.parent.postMessage({
+        type: 'command-processed',
+        source: 'figma-plugin',
+        command: msg.command,
+        timestamp: msg.timestamp || Date.now(),
+        success: true
+      }, '*');
+      
+      console.log('✅ Plugin UI: Notificação de sucesso enviada');
+      
+    } catch (error) {
+      console.error('❌ Plugin UI: Erro ao notificar sucesso:', error);
+    }
+  }
+  
+  // Notificar página web sobre erro
+  else if (msg && msg.type === 'notify-web-error') {
+    try {
+      // Notificar página web via postMessage
+      window.parent.postMessage({
+        type: 'command-error',
+        source: 'figma-plugin',
+        command: msg.command,
+        error: msg.error,
+        timestamp: msg.timestamp || Date.now(),
+        success: false
+      }, '*');
+      
+      console.log('📡 Plugin UI: Notificação de erro enviada');
+      
+    } catch (error) {
+      console.error('❌ Plugin UI: Erro ao notificar erro:', error);
+    }
+  }
+};
+
+// Log de inicialização com informações detalhadas
+console.log('🚀 Vicgario Plugin UI: Sistema de comunicação inicializado');
+console.log('🔧 Plugin UI: Informações do ambiente:');
+console.log('  - localStorage disponível:', window.isLocalStorageAvailable);
+console.log('  - Memória alternativa ativa:', window.pluginMemoryStore.size >= 0);
+console.log('  - Comandos em memória:', window.webCommands.length);
+console.log('🔗 Plugin UI: Pronto para comunicação com página web');
+
+// Manter status atualizado periodicamente no localStorage
+setInterval(() => {
+  try {
+    safeSetItem('figma-plugin-status', JSON.stringify({
+      connected: true,
+      timestamp: Date.now(),
+      capabilities: {
+        localStorage: window.isLocalStorageAvailable,
+        memoryStorage: true,
+        postMessage: true
+      }
+    }));
+    console.log('📊 Plugin UI: Status atualizado no localStorage');
+  } catch (error) {
+    console.log('ℹ️ Plugin UI: Erro ao atualizar status:', error);
+  }
+}, 3000); // A cada 3 segundos
+
+// Responder a verificações de ping da página web
+window.addEventListener('message', (event) => {
+  // Verificar se é um ping da página web
+  if (event.data && event.data.type === 'ping-plugin' && event.data.source === 'vicgario-web') {
+    console.log('🏓 Plugin UI: Ping recebido da página web, respondendo...');
+    
+    // Responder imediatamente com múltiplos métodos
+    try {
+      const responseMessage = {
+        type: 'plugin-connected',
+        source: 'figma-plugin',
+        timestamp: Date.now(),
+        pingId: event.data.id,
+        capabilities: {
+          localStorage: window.isLocalStorageAvailable,
+          memoryStorage: true,
+          postMessage: true
+        }
+      };
+      
+      // 1. Resposta via parent
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(responseMessage, '*');
+      }
+      
+      // 2. Resposta via top
+      if (window.top && window.top !== window) {
+        window.top.postMessage(responseMessage, '*');
+      }
+      
+      // 3. Broadcast global
+      window.postMessage(responseMessage, '*');
+      
+      // 4. Tentar localhost específico
+      try {
+        if (window.parent) {
+          window.parent.postMessage(responseMessage, 'http://localhost:3000');
+          window.parent.postMessage(responseMessage, 'https://localhost:3000');
+          window.parent.postMessage(responseMessage, 'https://ia.vicgar.io');
+        }
+      } catch (e) {
+        // Cross-origin, ignorar
+      }
+      
+      // 5. Atualizar localStorage com resposta
+      safeSetItem('figma-plugin-status', JSON.stringify({
+        connected: true,
+        timestamp: Date.now(),
+        lastPing: event.data.id,
+        capabilities: {
+          localStorage: window.isLocalStorageAvailable,
+          memoryStorage: true,
+          postMessage: true
+        }
+      }));
+      
+      console.log('✅ Plugin UI: Resposta ao ping enviada via múltiplos canais');
+    } catch (error) {
+      console.error('❌ Plugin UI: Erro ao responder ping:', error);
+    }
+  }
+  
+  // Verificar se é um ping via localStorage
+  if (event.data && event.data.type === 'ping-plugin') {
+    console.log('🔔 Plugin UI: Ping detectado (qualquer tipo), reforçando resposta...');
+    
+    // Resposta adicional via localStorage
+    safeSetItem('figma-plugin-pong', JSON.stringify({
+      type: 'pong',
+      source: 'figma-plugin',
+      timestamp: Date.now(),
+      originalPing: event.data
+    }));
+    
+    // Auto-remover pong após 5 segundos
+    setTimeout(() => {
+      safeRemoveItem('figma-plugin-pong');
+    }, 5000);
+  }
+});
+
+// Notificar página web que plugin está conectado - múltiplos canais para localhost
+try {
+  const connectionMessage = {
+    type: 'plugin-connected',
+    source: 'figma-plugin',
+    timestamp: Date.now(),
+    capabilities: {
+      localStorage: window.isLocalStorageAvailable,
+      memoryStorage: true,
+      postMessage: true
+    }
+  };
+  
+  // 1. Tentar comunicação direta via parent (para iframes)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage(connectionMessage, '*');
+    console.log('📡 Plugin UI: Notificação enviada via parent');
+  }
+  
+  // 2. Tentar comunicação com window.top (para nested iframes)
+  if (window.top && window.top !== window) {
+    window.top.postMessage(connectionMessage, '*');
+    console.log('📡 Plugin UI: Notificação enviada via top');
+  }
+  
+  // 3. Broadcast global para todas as janelas
+  window.postMessage(connectionMessage, '*');
+  console.log('📡 Plugin UI: Notificação enviada via broadcast');
+  
+  // 4. Tentar enviar para localhost especificamente
+  try {
+    const localhostMessage = { ...connectionMessage, target: 'localhost' };
+    if (window.parent) {
+      window.parent.postMessage(localhostMessage, 'http://localhost:3000');
+      window.parent.postMessage(localhostMessage, 'https://localhost:3000');
+    }
+    console.log('📡 Plugin UI: Notificação enviada para localhost');
+  } catch (localhostError) {
+    console.log('ℹ️ Plugin UI: Comunicação localhost falhou (esperado em dev)');
+  }
+  
+  // 5. Marcar status no localStorage para páginas externas
+  safeSetItem('figma-plugin-status', JSON.stringify({
+    connected: true,
+    timestamp: Date.now(),
+    capabilities: {
+      localStorage: window.isLocalStorageAvailable,
+      memoryStorage: true,
+      postMessage: true
+    }
+  }));
+  console.log('📡 Plugin UI: Status salvo no armazenamento');
+  
+  // 6. Emitir evento customizado para detecção avançada
+  try {
+    window.dispatchEvent(new CustomEvent('figma-plugin-ready', {
+      detail: connectionMessage
+    }));
+    console.log('📡 Plugin UI: Evento customizado emitido');
+  } catch (eventError) {
+    console.log('ℹ️ Plugin UI: Evento customizado falhou');
+  }
+  
+} catch (error) {
+  console.error('❌ Plugin UI: Erro ao notificar conexão:', error);
+}
+
+// Função de debug para verificar estado do armazenamento
+window.debugStorage = function() {
+  console.log('🔍 Plugin UI - Estado do Armazenamento:');
+  console.log('  localStorage disponível:', window.isLocalStorageAvailable);
+  console.log('  Comandos na memória:', window.webCommands.length);
+  console.log('  Itens no memory store:', window.pluginMemoryStore.size);
+  console.log('  Comandos:', window.webCommands);
+  console.log('  Memory store:', Array.from(window.pluginMemoryStore.entries()));
+};
+</script>
+
+</body>
+</html>
