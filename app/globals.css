@@ -598,6 +598,32 @@
   color: #ffffff !important;
 }
 
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.landing-page .text-white {
+  color: #ffffff !important;
+}
+
+.landing-page .text-white\/90 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.landing-page .text-white\/80 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
 .brand-theme .bg-blue-500 svg,
 .brand-theme .bg-indigo-500 svg,
 .brand-theme .brand-button svg {
