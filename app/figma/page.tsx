@@ -1157,9 +1157,9 @@ export default function FigmaPage() {
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
       />
       <SharedHeader />
-      <main className="flex h-[calc(100vh-80px)]">
+      <main className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-80px)]">
         {/* Interface Principal - Left Side */}
-        <div className="w-[480px] border-r border-white/10 bg-[#0f1728]/90 p-6 shadow-[20px_0_60px_rgba(8,15,25,0.35)] backdrop-blur-xl overflow-y-auto">
+        <div className="w-full lg:w-[480px] border-b border-white/10 lg:border-b-0 lg:border-r bg-[#0f1728]/90 p-6 shadow-[20px_0_60px_rgba(8,15,25,0.35)] backdrop-blur-xl overflow-y-auto">
           <div className="max-w-full">
             {/* Header */}
             <div className="mb-6">
@@ -1906,7 +1906,7 @@ export default function FigmaPage() {
         </div>
 
         {/* Figma Iframe - Right Side */}
-        <div className="flex-1 bg-white">
+        <div className="hidden lg:flex lg:flex-1 bg-white">
           <iframe
             ref={figmaIframeRef}
             style={{ border: "1px solid rgba(0, 0, 0, 0.1)" }}
