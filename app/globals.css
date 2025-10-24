@@ -302,6 +302,15 @@
   min-height: 100vh;
 }
 
+.brand-theme .bg-slate-950 {
+  background-image: linear-gradient(140deg, #f8fbff 0%, #e5f1ff 55%, #dbeafe 100%) !important;
+}
+
+.brand-theme .bg-slate-900\/70 {
+  background-color: rgba(229, 241, 255, 0.88) !important;
+  backdrop-filter: blur(24px);
+}
+
 .brand-theme .bg-\[\#1a1814\] {
   background: linear-gradient(140deg, #f8fbff 0%, #e5f1ff 55%, #dbeafe 100%) !important;
 }
@@ -322,6 +331,11 @@
 .brand-theme .text-\[\#1a1814\],
 .brand-theme .text-white {
   color: #0f172a !important;
+}
+
+.brand-theme .force-white,
+.brand-theme .force-white * {
+  color: #ffffff !important;
 }
 
 .brand-theme .text-\[\#1a1814\]\/80,

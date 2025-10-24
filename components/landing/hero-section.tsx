@@ -20,7 +20,8 @@ export function HeroSection() {
             Receba um plano acionável com priorização clara e materiais de apoio feitos para acelerar a sua marca.
           </p>
           <div className="flex flex-col gap-4 sm:flex-row">
-            <Button size="lg" className="h-auto px-12 py-7 text-lg font-semibold shadow-lg transition-all hover:shadow-xl" asChild>
+            <Button size="lg" className="h-14 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 text-lg font-semibold text-white shadow-xl transition-transform duration-200 hover:translate-y-[-2px] hover:shadow-2xl" asChild
+            >
               <Link href="/onboarding">
                 Começar agora
                 <span className="material-symbols-outlined ml-2 text-2xl">arrow_forward</span>
@@ -44,3 +45,4 @@ export function HeroSection() {
     </section>
   )
 }
+

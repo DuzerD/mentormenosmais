@@ -35,8 +35,8 @@ export function ProcessSection() {
         </div>
 
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
-          <div className="order-2 rounded-3xl bg-gradient-to-br from-primary to-blue-600 p-8 text-white lg:order-1">
-            <div className="relative overflow-hidden rounded-2xl">
+          <div className="order-2 rounded-3xl bg-gradient-to-br from-primary to-blue-600 p-8 text-white lg:order-1 space-y-6">
+            <div className="relative overflow-hidden rounded-2xl hidden lg:block">
               <img
                 src="/professional-person-with-confident-expression-oran.jpg"
                 alt="Mentora explicando plano estratégico"
@@ -52,6 +52,14 @@ export function ProcessSection() {
                   </Link>
                 </Button>
               </div>
+            </div>
+            <div className="lg:hidden">
+              <Button size="lg" className="w-full bg-white text-primary hover:bg-white/90" asChild>
+                <Link href="/onboarding" className="flex items-center justify-center gap-2 font-semibold">
+                  Garanta sua vaga no Mentoor
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </Link>
+              </Button>
             </div>
           </div>
 
@@ -71,3 +79,4 @@ export function ProcessSection() {
     </section>
   )
 }
+

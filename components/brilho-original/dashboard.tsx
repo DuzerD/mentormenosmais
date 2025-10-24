@@ -1,546 +1,1202 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Download, Palette, Type, ImageIcon, MessageCircle, FileDown, Loader2, Award, ArrowRight, Zap, CheckCircle2, Star } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { BrandplotCache } from "@/lib/brandplot-cache"
-import ScoreCounter from "../ScoreCounter"
-import { SharedHeader } from "@/components/SharedHeader"
+import { AnimatePresence, motion } from "framer-motion"
+import type { LucideIcon } from "lucide-react"
+import {
+  ArrowRight,
+  BarChart3,
+  Brain,
+  Flame,
+  Gauge,
+  Lightbulb,
+  Lock,
+  Medal,
+  Palette,
+  PenSquare,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Star,
+  Unlock,
+} from "lucide-react"
+import {
+  Radar,
+  RadarChart,
+  PolarAngleAxis,
+  PolarGrid,
+  ResponsiveContainer,
+} from "recharts"
 
-const sections = [
-  { id: "/logo", title: "Logo", icon: FileDown },
-  { id: "/colors", title: "Colors", icon: Palette },
-  { id: "/typography", title: "Typography", icon: Type },
-  { id: "/imagery", title: "Imagery", icon: ImageIcon },
-  { id: "/tone", title: "Tone of voice", icon: MessageCircle },
-  { id: "/download", title: "Download", icon: Download },
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import { BrandplotCache } from "@/lib/brandplot-cache"
+import { MentorRaizChat } from "./mentor-raiz-chat"
+
+type MissionKey = "missao_1" | "missao_2" | "missao_3" | "missao_4" | "missao_5"
+
+type MissionStatus = "locked" | "available" | "completed"
+
+interface MissionDefinition {
+  key: MissionKey
+  title: string
+  agent: string
+  description: string
+  icon: LucideIcon
+}
+
+interface MissionDisplay extends MissionDefinition {
+  status: MissionStatus
+  isActive: boolean
+}
+
+type AgentKey =
+  | "mentor"
+  | "estrategista"
+  | "copywriter"
+  | "designer"
+  | "social"
+  | "analista"
+
+type AgentStatus = "ativo" | "aguardando" | "bloqueado"
+
+interface AgentDefinition {
+  key: AgentKey
+  name: string
+  description: string
+  icon: LucideIcon
+  tooltip?: string
+}
+
+interface AgentDisplay extends AgentDefinition {
+  status: AgentStatus
+}
+
+interface RadarPoint {
+  dimension: string
+  value: number
+}
+
+interface DashboardData {
+  userName: string
+  clarityScore: number
+  xp: number
+  xpToNextLevel: number
+  levelName: string
+  xpDeltaOnUnlock: number
+  comparisonPercent: number
+  highestMissionUnlocked: MissionKey
+  activeMission?: MissionKey
+  completedMissions: MissionKey[]
+  previousDiagnosis?: RadarPoint[]
+}
+
+type BrandRecord = {
+  nome_empresa?: string
+  nomeMarca?: string
+  nomeEmpresa?: string
+  scoreDiagnostico?: string | number
+  missaoLiberada?: string
+  missoesConcluidas?: string[] | null
+  onboardingMetadata?: string | Record<string, unknown> | null
+  diagnosticoAnterior?: string | Record<string, unknown> | RadarPoint[]
+  xpAtual?: number
+  xpProximoNivel?: number
+  nivelAtual?: string
+  comparativoPercentual?: number
+}
+
+const missionOrder: MissionKey[] = [
+  "missao_1",
+  "missao_2",
+  "missao_3",
+  "missao_4",
+  "missao_5",
 ]
 
-async function fetchBrandData(idUnico: string) {
-  const response = await fetch(`/api/brand-data?idUnico=${encodeURIComponent(idUnico)}`)
-  if (!response.ok) return null
-  const result = await response.json()
-  if (result.success && result.data) return result.data
+const missionCtaConfig: Record<MissionKey, { href: string; label: string; shortLabel: string }> = {
+  missao_1: {
+    href: "/missao1",
+    label: "Entrar na Missao 1 — Estrategia da Marca",
+    shortLabel: "Entrar na Missao 1 ->",
+  },
+  missao_2: {
+    href: "/missao2",
+    label: "Entrar na Missao 2 — Clareza da Mensagem",
+    shortLabel: "Entrar na Missao 2 ->",
+  },
+  missao_3: {
+    href: "/missao3",
+    label: "Entrar na Missao 3 — Identidade Visual",
+    shortLabel: "Entrar na Missao 3 ->",
+  },
+  missao_4: {
+    href: "/missao4",
+    label: "Entrar na Missao 4 — Conteudo e Presenca",
+    shortLabel: "Entrar na Missao 4 ->",
+  },
+  missao_5: {
+    href: "/missao5",
+    label: "Entrar na Missao 5 — Analise e Ajuste",
+    shortLabel: "Entrar na Missao 5 ->",
+  },
+}
+
+const missionCatalog: Record<MissionKey, MissionDefinition> = {
+  missao_1: {
+    key: "missao_1",
+    title: "Estratégia da Marca",
+    agent: "💡 Estrategista",
+    description: "Mapeie essência, proposta de valor e posicionamento.",
+    icon: Lightbulb,
+  },
+  missao_2: {
+    key: "missao_2",
+    title: "Clareza da Mensagem",
+    agent: "✍️ Copywriter",
+    description: "Transforme estratégia em narrativa que conecta e vende.",
+    icon: PenSquare,
+  },
+  missao_3: {
+    key: "missao_3",
+    title: "Identidade Visual",
+    agent: "🎨 Designer",
+    description: "Dê forma visual a cada ideia para ganhar consistência.",
+    icon: Palette,
+  },
+  missao_4: {
+    key: "missao_4",
+    title: "Conteúdo & Presença",
+    agent: "📱 Social Media",
+    description: "Planeje presença constante com conteúdos alinhados.",
+    icon: Smartphone,
+  },
+  missao_5: {
+    key: "missao_5",
+    title: "Análise & Ajuste",
+    agent: "📊 Analista",
+    description: "Meça resultados e ajuste o que for preciso para escalar.",
+    icon: BarChart3,
+  },
+}
+
+const agentCatalog: AgentDefinition[] = [
+  {
+    key: "mentor",
+    name: "Mentor-Raiz",
+    description: "Supervisionando sua jornada.",
+    icon: Brain,
+  },
+  {
+    key: "estrategista",
+    name: "Estrategista",
+    description: "Pronto para começar Missão 1.",
+    icon: Lightbulb,
+  },
+  {
+    key: "copywriter",
+    name: "Copywriter",
+    description: "Vai transformar sua estratégia em palavras que vendem.",
+    icon: PenSquare,
+    tooltip: "Você ainda não chegou nesta fase, mas o time está acompanhando 👀.",
+  },
+  {
+    key: "designer",
+    name: "Designer",
+    description: "Vai dar forma à sua mensagem visual.",
+    icon: Palette,
+    tooltip: "Você ainda não chegou nesta fase, mas o time está acompanhando 👀.",
+  },
+  {
+    key: "social",
+    name: "Social Media",
+    description: "Vai planejar e criar seus conteúdos.",
+    icon: Smartphone,
+    tooltip: "Você ainda não chegou nesta fase, mas o time está acompanhando 👀.",
+  },
+  {
+    key: "analista",
+    name: "Analista",
+    description: "Vai medir seus resultados e otimizar tudo.",
+    icon: BarChart3,
+    tooltip: "Você ainda não chegou nesta fase, mas o time está acompanhando 👀.",
+  },
+]
+
+const defaultDashboardData: DashboardData = {
+  userName: "Criador",
+  clarityScore: 42,
+  xp: 120,
+  xpToNextLevel: 200,
+  levelName: "Aprendiz",
+  xpDeltaOnUnlock: 20,
+  comparisonPercent: 68,
+  highestMissionUnlocked: "missao_1",
+  completedMissions: [],
+  previousDiagnosis: [
+    { dimension: "Clareza", value: 48 },
+    { dimension: "Consistência", value: 36 },
+    { dimension: "Visual", value: 28 },
+    { dimension: "Execução", value: 32 },
+    { dimension: "Estratégia", value: 44 },
+  ],
+}
+
+const badgeCatalog: Array<{
+  key: MissionKey
+  title: string
+  description: string
+}> = [
+  {
+    key: "missao_1",
+    title: "Marca com Norte",
+    description: "Complete a Missão 1 para desbloquear.",
+  },
+  {
+    key: "missao_2",
+    title: "Voz Clara",
+    description: "Conquiste sua mensagem afiada.",
+  },
+  {
+    key: "missao_3",
+    title: "Identidade Viva",
+    description: "Transforme conceitos em visual consistente.",
+  },
+  {
+    key: "missao_4",
+    title: "Marca em Movimento",
+    description: "Marque presença com conteúdos alinhados.",
+  },
+  {
+    key: "missao_5",
+    title: "Autoridade",
+    description: "Feche a jornada com análise e melhoria contínua.",
+  },
+]
+
+function parseJSON<T>(value: unknown): T | null {
+  if (!value) return null
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+  if (typeof value === "object") {
+    return value as T
+  }
   return null
 }
 
+function isMissionKey(value: unknown): value is MissionKey {
+  return typeof value === "string" && missionOrder.includes(value as MissionKey)
+}
+
+function extractFirstName(name: string): string {
+  if (!name) return "Criador"
+  const parts = name.trim().split(/\s+/)
+  return parts[0] || name
+}
+
+function computeMissionDisplays(data: DashboardData): MissionDisplay[] {
+  const unlockedIndex = missionOrder.indexOf(data.highestMissionUnlocked)
+  const completed = new Set(data.completedMissions.filter(isMissionKey))
+
+  let activeKey: MissionKey | null = null
+  if (data.activeMission && missionOrder.includes(data.activeMission)) {
+    activeKey = data.activeMission
+  }
+  if (!activeKey) {
+    activeKey =
+      missionOrder.find((key, index) => index <= unlockedIndex && !completed.has(key)) ??
+      data.highestMissionUnlocked
+  }
+
+  return missionOrder.map((key, index) => {
+    const definition = missionCatalog[key]
+
+    let status: MissionStatus = "locked"
+    if (completed.has(key)) {
+      status = "completed"
+    } else if (index <= unlockedIndex) {
+      status = "available"
+    }
+
+    const isActive = status === "available" && key === activeKey && !completed.has(key)
+
+    return {
+      ...definition,
+      status,
+      isActive,
+    }
+  })
+}
+
+function computeAgentDisplays(missions: MissionDisplay[]): AgentDisplay[] {
+  const activeMissions = new Set(
+    missions
+      .filter((mission) => mission.status !== "locked")
+      .map((mission) => mission.key),
+  )
+
+  return agentCatalog.map((agent) => {
+    let status: AgentStatus = "bloqueado"
+
+    if (agent.key === "mentor") {
+      status = "ativo"
+    } else if (agent.key === "estrategista") {
+      status = activeMissions.has("missao_1") ? "ativo" : "aguardando"
+    } else if (agent.key === "copywriter") {
+      status = activeMissions.has("missao_2") ? "ativo" : "aguardando"
+    } else if (agent.key === "designer") {
+      status = activeMissions.has("missao_3") ? "ativo" : "aguardando"
+    } else if (agent.key === "social") {
+      status = activeMissions.has("missao_4") ? "ativo" : "aguardando"
+    } else if (agent.key === "analista") {
+      status = activeMissions.has("missao_5") ? "ativo" : "aguardando"
+    }
+
+    if (status === "aguardando" && !activeMissions.has("missao_1")) {
+      status = "bloqueado"
+    }
+
+    return {
+      ...agent,
+      status,
+    }
+  })
+}
+
+function normalizeRadarData(value: unknown): RadarPoint[] | undefined {
+  if (!value) return undefined
+
+  const parsed = parseJSON<unknown>(value) ?? value
+
+  if (Array.isArray(parsed)) {
+    const sanitized = parsed
+      .map((item) => {
+        if (
+          item &&
+          typeof item === "object" &&
+          "dimension" in item &&
+          "value" in item &&
+          typeof (item as RadarPoint).dimension === "string" &&
+          typeof (item as RadarPoint).value === "number"
+        ) {
+          return item as RadarPoint
+        }
+        if (
+          item &&
+          typeof item === "object" &&
+          "name" in item &&
+          "value" in item &&
+          typeof (item as { name: string }).name === "string" &&
+          typeof (item as { value: number }).value === "number"
+        ) {
+          return { dimension: (item as { name: string }).name, value: (item as { value: number }).value }
+        }
+        return null
+      })
+      .filter(Boolean) as RadarPoint[]
+
+    return sanitized.length ? sanitized : undefined
+  }
+
+  if (parsed && typeof parsed === "object") {
+    const entries = Object.entries(parsed as Record<string, number>)
+      .filter(([, numberValue]) => typeof numberValue === "number")
+      .map(([dimension, numberValue]) => ({ dimension, value: numberValue }))
+
+    return entries.length ? entries : undefined
+  }
+
+  return undefined
+}
+
+function mapRecordToDashboardData(record: BrandRecord): Partial<DashboardData> {
+  const clarityScoreRaw = record.scoreDiagnostico
+  const clarityScore =
+    typeof clarityScoreRaw === "number"
+      ? clarityScoreRaw
+      : typeof clarityScoreRaw === "string"
+        ? Number.parseInt(clarityScoreRaw, 10)
+        : undefined
+
+  const highestMission = isMissionKey(record.missaoLiberada)
+    ? record.missaoLiberada
+    : record.missaoLiberada === "todas"
+      ? "missao_5"
+      : undefined
+
+  const metadata = parseJSON<Record<string, unknown> | null>(record.onboardingMetadata)
+
+  const metadataCompleted = Array.isArray(metadata?.missoesConcluidas)
+    ? (metadata?.missoesConcluidas.filter(isMissionKey) as MissionKey[])
+    : undefined
+
+  const explicitCompleted = Array.isArray(record.missoesConcluidas)
+    ? (record.missoesConcluidas.filter(isMissionKey) as MissionKey[])
+    : undefined
+
+  const completedMissions = metadataCompleted ?? explicitCompleted ?? []
+  const hasCompletedMission1 = completedMissions.includes("missao_1")
+
+  const xpAtual =
+    typeof metadata?.xpAtual === "number"
+      ? metadata?.xpAtual
+      : typeof record.xpAtual === "number"
+        ? record.xpAtual
+        : undefined
+
+  const xpProximoNivel =
+    typeof metadata?.xpProximoNivel === "number"
+      ? metadata?.xpProximoNivel
+      : typeof record.xpProximoNivel === "number"
+        ? record.xpProximoNivel
+        : undefined
+
+  const nivelAtual =
+    typeof metadata?.nivelAtual === "string"
+      ? metadata?.nivelAtual
+      : typeof record.nivelAtual === "string"
+        ? record.nivelAtual
+        : undefined
+
+  const comparison =
+    typeof metadata?.comparativoPercentual === "number"
+      ? metadata?.comparativoPercentual
+      : typeof record.comparativoPercentual === "number"
+        ? record.comparativoPercentual
+        : undefined
+
+  const activeMission =
+    typeof metadata?.missaoAtual === "string" && isMissionKey(metadata.missaoAtual)
+      ? metadata.missaoAtual
+      : undefined
+
+  const previousDiagnosis =
+    normalizeRadarData(metadata?.diagnosticoAnterior) ?? normalizeRadarData(record.diagnosticoAnterior)
+
+  const userName =
+    typeof record.nome_empresa === "string"
+      ? record.nome_empresa
+      : typeof record.nomeEmpresa === "string"
+        ? record.nomeEmpresa
+        : typeof record.nomeMarca === "string"
+          ? record.nomeMarca
+          : undefined
+
+  const baselineClarity = clarityScore ?? defaultDashboardData.clarityScore
+  const adjustedClarity = hasCompletedMission1 ? Math.min(100, baselineClarity + 7) : clarityScore
+
+  const baselineXp = xpAtual ?? defaultDashboardData.xp
+  const adjustedXp = hasCompletedMission1 ? baselineXp + 80 : xpAtual
+
+  const baselineXpTarget = xpProximoNivel ?? defaultDashboardData.xpToNextLevel
+  const adjustedXpTarget = hasCompletedMission1 ? Math.max(baselineXpTarget, baselineXp + 140) : xpProximoNivel
+
+  const baselineLevel = nivelAtual ?? defaultDashboardData.levelName
+  const adjustedLevel = hasCompletedMission1 ? `${baselineLevel} 2.0` : nivelAtual
+
+  const baselineComparison = comparison ?? defaultDashboardData.comparisonPercent
+  const adjustedComparison = hasCompletedMission1 ? Math.min(100, baselineComparison + 7) : comparison
+
+  const baselineRadar = previousDiagnosis ?? defaultDashboardData.previousDiagnosis
+  const adjustedRadar = hasCompletedMission1
+    ? baselineRadar.map((point) => ({
+        dimension: point.dimension,
+        value: Math.min(100, point.value + 10),
+      }))
+    : previousDiagnosis
+
+  return {
+    userName,
+    clarityScore: adjustedClarity ?? baselineClarity,
+    highestMissionUnlocked: highestMission,
+    completedMissions,
+    xp: adjustedXp ?? baselineXp,
+    xpToNextLevel: adjustedXpTarget ?? baselineXpTarget,
+    levelName: adjustedLevel ?? baselineLevel,
+    comparisonPercent: adjustedComparison ?? baselineComparison,
+    activeMission,
+    previousDiagnosis: adjustedRadar,
+  }
+}
+
+function mergeDashboardData(
+  base: DashboardData,
+  updates: Partial<DashboardData>,
+): DashboardData {
+  return {
+    userName: updates.userName ?? base.userName,
+    clarityScore: updates.clarityScore ?? base.clarityScore,
+    xp: updates.xp ?? base.xp,
+    xpToNextLevel: updates.xpToNextLevel ?? base.xpToNextLevel,
+    levelName: updates.levelName ?? base.levelName,
+    xpDeltaOnUnlock: updates.xpDeltaOnUnlock ?? base.xpDeltaOnUnlock,
+    comparisonPercent: updates.comparisonPercent ?? base.comparisonPercent,
+    highestMissionUnlocked: updates.highestMissionUnlocked ?? base.highestMissionUnlocked,
+    activeMission: updates.activeMission ?? base.activeMission,
+    completedMissions: updates.completedMissions ?? base.completedMissions,
+    previousDiagnosis: updates.previousDiagnosis ?? base.previousDiagnosis,
+  }
+}
+
 export default function Dashboard() {
-  const [score, setScore] = useState<number>(0)
-  const [companyName, setCompanyName] = useState<string>("Sua Marca")
-  const [estrategia, setEstrategia] = useState<any>(null)
-  const [loadingEstrategia, setLoadingEstrategia] = useState(false)
-  const [erroEstrategia, setErroEstrategia] = useState<string | null>(null)
-  const [enviadoDesigner, setEnviadoDesigner] = useState<boolean | null>(null)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [data, setData] = useState<DashboardData>(defaultDashboardData)
+  const [isIntroVisible, setIsIntroVisible] = useState(true)
+  const [showXpPulse, setShowXpPulse] = useState(false)
+  const [showValueToast, setShowValueToast] = useState(false)
+  const [diagnosticModalOpen, setDiagnosticModalOpen] = useState(false)
+
+  useEffect(() => {
+    const INTRO_HIDE_DELAY = 6000
+    const XP_PULSE_HIDE_DELAY = 10000
+
+    const unlockTimer = window.setTimeout(() => {
+      setIsIntroVisible(false)
+      setShowXpPulse(true)
+    }, INTRO_HIDE_DELAY)
+
+    const xpTimer = window.setTimeout(() => {
+      setShowXpPulse(false)
+    }, XP_PULSE_HIDE_DELAY)
+
+    return () => {
+      window.clearTimeout(unlockTimer)
+      window.clearTimeout(xpTimer)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 240) {
+        setShowValueToast(true)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+
+    const toastTimer = window.setTimeout(() => {
+      setShowValueToast(false)
+    }, 12000)
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.clearTimeout(toastTimer)
+    }
+  }, [])
 
   useEffect(() => {
     async function loadData() {
-      const startTime = Date.now()
-      
-      let idUnico = null
-      if (typeof window !== "undefined") {
-        const cache = BrandplotCache.get()
-        if (cache && cache.idUnico) {
-          idUnico = cache.idUnico
-        } else {
-          const storedId = localStorage.getItem("brandplot_idUnico")
-          if (storedId) idUnico = storedId
-        }
+      let idUnico: string | null = null
+
+      try {
+        idUnico = BrandplotCache.getIdUnico()
+      } catch {
+        idUnico = null
       }
-      if (idUnico) {
-        const response = await fetch(`/api/brand-data?idUnico=${encodeURIComponent(idUnico)}`)
-        if (response.ok) {
-          const result = await response.json()
-          if (result.success && result.data) {
-            const scoreValue = result.data.scoreDiagnostico ? parseInt(result.data.scoreDiagnostico, 10) : 95
-            setScore(scoreValue)
-            setCompanyName(result.data.nome_empresa || "Sua Marca")
-            if (result.data.estrategia) {
-              try {
-                setEstrategia(JSON.parse(result.data.estrategia))
-              } catch {
-                setEstrategia(result.data.estrategia)
-              }
-            }
-            if (typeof result.data.enviadoDesigner !== 'undefined') {
-              setEnviadoDesigner(result.data.enviadoDesigner)
-            }
-          }
+
+      if (!idUnico) {
+        try {
+          idUnico = window.localStorage?.getItem("brandplot_idUnico") ?? null
+        } catch {
+          idUnico = null
         }
       }
 
-      // Garantir que o loading dure pelo menos 2 segundos
-      const elapsedTime = Date.now() - startTime
-      const remainingTime = Math.max(0, 2000 - elapsedTime)
-      
-      setTimeout(() => {
-        setIsInitialLoading(false)
-      }, remainingTime)
+      if (!idUnico) return
+
+      try {
+        const response = await fetch(`/api/brand-data?idUnico=${encodeURIComponent(idUnico)}`)
+        if (!response.ok) return
+
+        const result = await response.json()
+        if (!result?.success || !result?.data) return
+
+        const mapped = mapRecordToDashboardData(result.data as BrandRecord)
+        setData((prev) => mergeDashboardData(prev, mapped))
+      } catch (error) {
+        console.error("Erro ao carregar dados do dashboard:", error)
+      }
     }
+
     loadData()
   }, [])
 
-  async function handleGerarEstrategia() {
-    setLoadingEstrategia(true)
-    setErroEstrategia(null)
-    let idUnico = null
-    if (typeof window !== "undefined") {
-      const cache = BrandplotCache.get()
-      if (cache && cache.idUnico) {
-        idUnico = cache.idUnico
-      } else {
-        const storedId = localStorage.getItem("brandplot_idUnico")
-        if (storedId) idUnico = storedId
-      }
-    }
-    if (!idUnico) {
-      setErroEstrategia("ID não encontrado. Faça login novamente.")
-      setLoadingEstrategia(false)
-      return
-    }
-    try {
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idUnico })
-      })
-      if (!response.ok) {
-        if (response.status === 429) {
-          try {
-            const errorData = await response.json()
-            setErroEstrategia(errorData.message || "Limite de requisições excedido. Tente novamente mais tarde.")
-          } catch {
-            setErroEstrategia("Limite de requisições excedido. Tente novamente mais tarde.")
-          }
-        } else {
-          throw new Error("Erro ao gerar estratégia")
-        }
-        return
-      }
-      const result = await response.json()
-      if (result.estrategia) {
-        setEstrategia(result.estrategia)
-      }
-    } catch (err) {
-      setErroEstrategia("Erro ao gerar estratégia. Tente novamente.")
-    } finally {
-      setLoadingEstrategia(false)
-    }
-  }
-
-  async function handleEnviarDesigner() {
-    let idUnico = null
-    if (typeof window !== "undefined") {
-      const cache = BrandplotCache.get()
-      if (cache && cache.idUnico) {
-        idUnico = cache.idUnico
-      } else {
-        const storedId = localStorage.getItem("brandplot_idUnico")
-        if (storedId) idUnico = storedId
-      }
-    }
-    if (!idUnico) {
-      setErroEstrategia("ID não encontrado. Faça login novamente.")
-      return
-    }
-    try {
-      const response = await fetch("/api/brand-data", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idUnico, enviadoDesigner: true })
-      })
-      if (!response.ok) throw new Error("Erro ao enviar ao designer")
-      setEnviadoDesigner(true)
-    } catch {
-      setErroEstrategia("Erro ao enviar ao designer. Tente novamente.")
-    }
-  }
-
-  // Skeleton Components para o novo design
-  const SkeletonCard = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl"
-    >
-      <div className="animate-pulse">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-white/10"></div>
-          <div className="h-6 bg-white/10 rounded w-1/2"></div>
-        </div>
-        <div className="h-4 bg-white/5 rounded mb-4 w-3/4"></div>
-        <div className="h-4 bg-white/5 rounded mb-6 w-full"></div>
-        
-        <div className="flex items-center justify-center mb-6">
-          <div className="w-32 h-32 bg-white/10 rounded-full"></div>
-        </div>
-        
-        <div className="text-center">
-          <div className="h-10 bg-white/10 rounded w-full"></div>
-        </div>
-      </div>
-    </motion.div>
+  const missions = useMemo(() => computeMissionDisplays(data), [data])
+  const agents = useMemo(() => computeAgentDisplays(missions), [missions])
+  const firstName = useMemo(() => extractFirstName(data.userName), [data.userName])
+  const levelProgress = useMemo(() => {
+    if (!data.xpToNextLevel) return 0
+    const percentage = Math.round((data.xp / data.xpToNextLevel) * 100)
+    return Math.max(0, Math.min(100, Number.isFinite(percentage) ? percentage : 0))
+  }, [data.xp, data.xpToNextLevel])
+  const activeMission = missions.find((mission) => mission.isActive) ?? missions[0]
+  const activeMissionCta = missionCtaConfig[activeMission.key] ?? missionCtaConfig.missao_1
+  const completedMissionSummaries = useMemo(
+    () =>
+      missions
+        .filter((mission) => mission.status === "completed")
+        .map(({ key, title, description }) => ({ key, title, description })),
+    [missions],
   )
-
-  if (isInitialLoading) {
-    return (
-      <div className="relative min-h-screen w-full overflow-hidden bg-[#1a1814]">
-        {/* Background elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.05] via-transparent to-amber-700/[0.05] blur-3xl" />
-        
-        {/* Decorative shapes */}
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/[0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-700/[0.05] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-        {/* Header */}
-        <div className="relative z-10">
-          <div className="bg-[#1a1814] border-b border-[#c8b79e]/20 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse"></div>
-                <div className="h-5 bg-white/10 rounded w-24 animate-pulse"></div>
-              </div>
-              <div className="flex items-center gap-8">
-                <div className="h-4 bg-white/10 rounded w-16 animate-pulse"></div>
-                <div className="h-4 bg-white/10 rounded w-8 animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <main className="relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-16">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
-            >
-              <div className="h-8 bg-white/10 rounded mb-8 w-1/3 mx-auto animate-pulse"></div>
-            </motion.div>
-
-            <div className="space-y-6">
-              <SkeletonCard />
-              <SkeletonCard />
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
+  const nextMissionForChat = useMemo(() => {
+    const available = missions.find((mission) => mission.status === "available")
+    if (available) return available
+    return missions.find((mission) => mission.status !== "completed") ?? null
+  }, [missions])
+  const xpTarget = data.xpToNextLevel || data.xp + 80
+  const radarData = useMemo(
+    () => data.previousDiagnosis ?? defaultDashboardData.previousDiagnosis,
+    [data.previousDiagnosis],
+  )
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#1a1814]">
-      {/* Background elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.05] via-transparent to-amber-700/[0.05] blur-3xl" />
-      
-      {/* Decorative shapes */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/[0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-700/[0.05] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-      {/* Header */}
-      <div className="relative z-10">
-        <SharedHeader companyName={companyName} />
-      </div>      {/* Main content */}
-      <main className="relative z-10 container mx-auto px-4 md:px-6 py-8 sm:py-12 md:py-16">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-center mb-8"
-          >            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6 max-w-full">
-              <Image
-                src="/images/brilho-original-logo.png"
-                alt="BrandPlot"
-                width={20}
-                height={20}
-                className="rounded-full flex-shrink-0"
-              />
-              <span className="text-xs sm:text-sm text-white/60 tracking-wide truncate">
-                Dashboard de <span className="text-[#c8b79e] font-medium">{companyName}</span>
-              </span>
-            </div>            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-              Bem-vindo de volta
-            </h1>
-            <p className="text-white/60 text-sm sm:text-base">
-              Acompanhe o progresso da sua marca e acesse todas as ferramentas
-            </p>
-          </motion.div>          <div className="space-y-4 sm:space-y-6">
-            {/* Card: Diagnóstico da Marca */}
+    <TooltipProvider delayDuration={120}>
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-[#f8f8fb] to-[#eef6ff] pb-20">
+        <AnimatePresence>
+          {isIntroVisible && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl"
+              className="fixed inset-0 z-30 flex items-center justify-center bg-[#0b0820]/80 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 flex items-center justify-center border border-amber-500/30">
-                  <Award className="w-6 h-6 text-amber-400" />
-                </div>
-                <h2 className="text-xl md:text-2xl font-bold text-white">Diagnóstico da Marca</h2>
-              </div>
-                <p className="text-white/80 mb-6 leading-relaxed text-sm sm:text-base">
-                Veja o resultado do diagnóstico completo de <span className="font-bold text-[#c8b79e] break-words">{companyName}</span>, 
-                com insights personalizados e score de clareza & emoção da marca.
-              </p>              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 md:gap-8 mb-6">
-                <div className="flex flex-col items-center">
-                  <div className="relative mb-3 md:mb-4">
-                    <ScoreCounter targetScore={score} duration={2000} />
-                  </div>
-                  <p className="text-white/60 text-xs sm:text-sm text-center">
-                    Nota de Clareza & Emoção
-                  </p>
-                </div>
-                
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
-                      <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
-                      <span className="text-white/80 text-xs sm:text-sm">Diagnóstico Completo</span>
-                    </div>
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
-                      <Star className="w-4 h-4 text-[#c8b79e] flex-shrink-0" />
-                      <span className="text-white/80 text-xs sm:text-sm">Insights Personalizados</span>
-                    </div>
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
-                      <Zap className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                      <span className="text-white/80 text-xs sm:text-sm">Próximos Passos Definidos</span>
-                    </div>
-                  </div>
-                </div>
-              </div>              <div className="text-center">
-                <Button asChild className="bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-[#1a1814] font-medium border-0 w-full py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
-                  <Link href="/diagnostico" className="flex items-center justify-center gap-2">
-                    <span className="hidden sm:inline">Ver diagnóstico completo</span>
-                    <span className="sm:hidden">Ver diagnóstico</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Card: Estratégia de Marca */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl"
-            >              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500/20 to-blue-600/20 flex items-center justify-center border border-blue-500/30 flex-shrink-0">
-                    <Zap className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">Estratégia de Marca</h2>
-                </div>
-                <span className="text-[#c8b79e]/60 text-xs italic bg-[#c8b79e]/10 px-2 py-1 rounded-full border border-[#c8b79e]/20 self-start sm:self-center whitespace-nowrap">
-                  Gerado por IA
-                </span>
-              </div>
-                <p className="text-white/80 mb-6 leading-relaxed text-sm sm:text-base">
-                Acesse a análise de perfil e direcionamento estratégico para sua marca, com insights personalizados e
-                recomendações acionáveis para crescimento.
-              </p>
-
-              <div className="space-y-4">
-                {!estrategia ? (
-                  <Button
-                    className="bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-[#1a1814] font-medium border-0 w-full py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
-                    onClick={handleGerarEstrategia}
-                    disabled={loadingEstrategia}
-                  >                    {loadingEstrategia ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2 w-4 h-4" />
-                        <span className="hidden sm:inline">Gerando estratégia...</span>
-                        <span className="sm:hidden">Gerando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="mr-2 w-4 h-4" />
-                        <span className="hidden sm:inline">Gerar estratégia de marca</span>
-                        <span className="sm:hidden">Gerar estratégia</span>
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <div className="flex flex-col sm:flex-row gap-3">                    <Button asChild className="bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-[#1a1814] font-medium border-0 flex-1 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
-                      <Link href="/estrategia" className="flex items-center justify-center gap-2">
-                        <span className="hidden sm:inline">Visualizar estratégia</span>
-                        <span className="sm:hidden">Ver estratégia</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      className="bg-gradient-to-r from-green-500/20 to-green-600/20 hover:from-green-500/30 hover:to-green-600/30 text-green-300 border border-green-500/30 flex-1 py-2.5 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={handleEnviarDesigner}
-                      disabled={enviadoDesigner === true}
-                    >                      {enviadoDesigner === true ? (
-                        <>
-                          <CheckCircle2 className="mr-2 w-4 h-4" />
-                          <span className="hidden sm:inline">Enviado ao Designer</span>
-                          <span className="sm:hidden">Enviado</span>
-                        </>
-                      ) : (
-                        <>
-                          <Star className="mr-2 w-4 h-4" />
-                          <span className="hidden sm:inline">Aprovar e Enviar</span>
-                          <span className="sm:hidden">Aprovar</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-                
-                {erroEstrategia && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
-                    {erroEstrategia}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Card: Modelo de Voz IA */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="bg-gradient-to-br from-orange-500/[0.12] to-orange-600/[0.04] backdrop-blur-sm border border-orange-500/20 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl"
-            >              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500/20 to-orange-600/20 flex items-center justify-center border border-orange-500/30 flex-shrink-0">
-                    <MessageCircle className="w-6 h-6 text-orange-400" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">Assistente de IA - BrandPlot</h2>
-                </div>
-                <span className="bg-gradient-to-r from-orange-500/15 to-orange-600/10 text-orange-300 text-xs font-medium px-2 sm:px-3 py-1 rounded-full border border-orange-500/20 self-start sm:self-center whitespace-nowrap">
-                  Beta
-                </span>
-              </div>
-                <p className="text-white/80 mb-6 leading-relaxed text-sm sm:text-base">
-                Converse com nosso modelo de IA especializado sobre <span className="font-bold text-orange-300 break-words">{companyName}</span>. 
-                Faça perguntas sobre sua marca, explore insights e obtenha orientações personalizadas através de uma conversa intuitiva.
-              </p>
-
-              <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border border-orange-500/30 rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Zap className="w-4 h-4 text-orange-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-orange-200 mb-1 text-sm sm:text-base">O que você pode fazer:</h3>                    <ul className="text-xs sm:text-sm text-orange-200/80 space-y-1">
-                      <li>• Discutir estratégias de posicionamento</li>
-                      <li>• Explorar oportunidades de mercado</li>
-                      <li>• Obter sugestões de melhorias</li>
-                      <li>• Esclarecer dúvidas sobre sua marca</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>              <div className="text-center">
-                <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium border-0 w-full py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
-                  <Link href="/chat" className="flex items-center justify-center gap-2">
-                    <span className="hidden sm:inline">Iniciar conversa</span>
-                    <span className="sm:hidden">Conversar</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Card: Edição no Figma */}
-            {/* <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              className="bg-gradient-to-br from-purple-500/[0.12] to-purple-600/[0.04] backdrop-blur-sm border border-purple-500/20 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl"
-            >              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500/20 to-purple-600/20 flex items-center justify-center border border-purple-500/30 flex-shrink-0">
-                    <Palette className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">Visualização no Figma</h2>
-                </div>
-                <span className="bg-gradient-to-r from-purple-500/15 to-purple-600/10 text-purple-300 text-xs font-medium px-2 sm:px-3 py-1 rounded-full border border-purple-500/20 self-start sm:self-center whitespace-nowrap">
-                  Design
-                </span>
-              </div>
-              
-              <p className="text-white/80 mb-6 leading-relaxed">
-                Edite aqui no Figma seu layout de postagem e outros materiais gráficos para <span className="font-bold text-purple-300">{companyName}</span>. 
-                Acesse templates personalizados e ferramentas de design colaborativo.
-              </p>
-
-              <div className="bg-gradient-to-r from-purple-500/10 to-purple-600/5 border border-purple-500/30 rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <ImageIcon className="w-4 h-4 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-purple-200 mb-1">Recursos disponíveis:</h3>
-                    <ul className="text-sm text-purple-200/80 space-y-1">
-                      <li>• Templates de postagem para redes sociais</li>
-                      <li>• Layouts personalizados para sua marca</li>
-                      <li>• Paleta de cores e tipografia oficial</li>
-                      <li>• Elementos gráficos exclusivos</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <Button asChild className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium border-0 px-8 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
-                  <Link href="/figma" className="flex items-center gap-2">
-                    Abrir
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-              </div>
-            </motion.div> */}
-
-            {/* Card: Guidelines (quando estratégia existe) */}
-            {estrategia && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.6 }}
-                className="bg-gradient-to-br from-[#c8b79e]/[0.15] to-[#c8b79e]/[0.05] backdrop-blur-sm border border-[#c8b79e]/20 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl"
+                initial={{ scale: 0.92, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="force-white w-[min(90%,420px)] rounded-3xl border border-white/25 bg-[#110c2f]/90 p-8 text-white shadow-[0_24px_70px_rgba(0,0,0,0.4)] backdrop-blur-2xl"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#c8b79e]/30 to-[#c8b79e]/20 flex items-center justify-center border border-[#c8b79e]/40">
-                    <Palette className="w-6 h-6 text-[#c8b79e]" />
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">Guidelines de Marca</h2>
+                <div className="flex items-center gap-3 text-sm font-medium uppercase tracking-[0.3em] text-white/80">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Liberacao confirmada</span>
                 </div>
-                
-                <div className="text-white/80 mb-6">
-                  {enviadoDesigner === true ? (
-                    <div className="bg-gradient-to-r from-green-500/10 to-green-600/5 border border-green-500/30 rounded-xl p-4 text-green-300">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <span className="font-semibold">Em revisão pelo designer</span>
-                      </div>
-                      <p className="text-sm text-green-200">
-                        Entraremos em contato quando os guidelines estiverem disponíveis para download.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bg-gradient-to-r from-[#c8b79e]/10 to-[#c8b79e]/5 border border-[#c8b79e]/30 rounded-xl p-4 text-[#c8b79e]">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-5 h-5" />
-                        <span className="font-semibold">Pronto para envio</span>
-                      </div>
-                      <p className="text-sm text-[#c8b79e]/80">
-                        Envie sua estratégia ao designer para começar o processo de criação dos guidelines da marca.
-                      </p>
-                    </div>
-                  )}
+                <div className="mt-6 space-y-4 text-[0.95rem] leading-relaxed text-white">
+                  <p>
+                    Excelente decisao,{" "}
+                    <span className="font-semibold text-white">{firstName}</span>! Seu investimento foi confirmado e o
+                    time Menos Mais ja esta a postos.
+                  </p>
+                  <p>
+                    Voce agora tem acesso total a sua <strong>Sala da Marca</strong> - o centro de comando onde vamos
+                    Voce agora tem acesso total a sua <strong>Sala da Marca</strong> - o centro de comando onde vamos
+                    acompanhar seu progresso, suas missoes e sua evolucao em clareza.
+                  </p>
+                  <p>Vamos dar uma olhada?</p>
                 </div>
               </motion.div>
-            )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.main
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: isIntroVisible ? 0 : 1, y: isIntroVisible ? 24 : 0 }}
+          transition={{ delay: isIntroVisible ? 0.4 : 0.2, duration: 0.6, ease: "easeOut" }}
+          className={cn(
+            "mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 pb-10 pt-16 sm:px-6 lg:px-10",
+            isIntroVisible && "pointer-events-none select-none",
+          )}
+        >
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
+            <section className="flex flex-1 flex-col justify-between rounded-3xl border border-[#e2e2f6] bg-white/90 p-8 shadow-xl shadow-[#c8d6ff]/20">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#9e7cf2]">
+                      Sala da Marca
+                    </p>
+                    <h1 className="text-3xl font-semibold tracking-tight text-[#1c1c1c] sm:text-4xl">
+                      Clareza da Marca: {Math.round(data.clarityScore)}%
+                    </h1>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    className="rounded-full border border-[#d7d7f3] bg-white px-4 py-2 text-sm font-semibold text-[#5a4aff] shadow-sm transition hover:border-[#b6b6f0] hover:bg-[#f6f5ff]"
+                    onClick={() => setDiagnosticModalOpen(true)}
+                  >
+                    <Gauge className="mr-2 h-4 w-4" />
+                    Ver Diagnóstico Anterior
+                  </Button>
+                </div>
+
+                <p className="max-w-lg text-base text-[#4f4f63]">
+                  “A cada missão, sua marca ganha mais foco e coerência. Continue e veja esse número subir.”
+                </p>
+              </div>
+              <MentorRaizChat
+                companyName={data.userName}
+                completedMissions={completedMissionSummaries}
+                nextMission={
+                  nextMissionForChat
+                    ? {
+                        key: nextMissionForChat.key,
+                        title: nextMissionForChat.title,
+                        description: nextMissionForChat.description,
+                      }
+                    : null
+                }
+                className="mt-6"
+              />
+            </section>
+
+            <section className="relative overflow-hidden rounded-3xl border border-[#dedefb] bg-gradient-to-br from-[#faf7ff] via-white to-[#eef6ff] p-8 shadow-lg shadow-[#d2defa]/40 lg:w-80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#9e7cf2]">
+                    Nível da Marca
+                  </span>
+                  <h2 className="mt-2 text-2xl font-semibold text-[#1c1c1c]">{data.levelName}</h2>
+                </div>
+                <ShieldCheck className="h-8 w-8 text-[#9e7cf2]" />
+              </div>
+
+              <div className="mt-7 space-y-4">
+                <div className="flex items-center justify-between text-sm font-medium text-[#5b5b72]">
+                  <span>XP: {data.xp}</span>
+                  <span>{xpTarget} para próximo nível</span>
+                </div>
+                <div className="relative h-3 w-full overflow-hidden rounded-full bg-white/60">
+                  <motion.div
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${levelProgress}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#9e7cf2] via-[#7f94ff] to-[#5dd6ff]"
+                  />
+                </div>
+                <p className="text-xs text-[#67688a]">
+                  Você está {Math.round(data.comparisonPercent)}% à frente de quem iniciou com a gente.
+                </p>
+              </div>
+
+              <div className="mt-8 space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-[#8a8ab0]">
+                  Selos desbloqueáveis
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {badgeCatalog.map((badge) => {
+                    const unlocked = data.completedMissions.includes(badge.key)
+                    return (
+                      <div
+                        key={badge.key}
+                        className={cn(
+                          "flex flex-col rounded-2xl border px-4 py-3 text-xs font-semibold transition",
+                          unlocked
+                            ? "border-[#b5a3ff] bg-white text-[#433f6b] shadow-sm shadow-[#c6bbff]/60"
+                            : "border-[#e4e4f7] bg-white/70 text-[#9a9ab5]",
+                        )}
+                      >
+                        <span className="text-base">
+                          {unlocked ? <Star className="h-4 w-4 text-[#9e7cf2]" /> : <Lock className="h-4 w-4" />}
+                        </span>
+                        <p className="mt-2">{badge.title}</p>
+                        <span className="mt-1 text-[0.7rem] font-normal text-[#78789b]">{badge.description}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
-      </main>
-    </div>
+
+          <section className="rounded-3xl border border-[#d9dcff] bg-white/95 p-8 shadow-xl shadow-[#cdd8ff]/30">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold text-[#1c1c1c]">Mapa de Missões</h2>
+                <p className="text-sm text-[#63648a]">
+                  Acompanhe cada agente e status. Complete para liberar a próxima fase.
+                </p>
+              </div>
+              <Badge className="rounded-full bg-[#9e7cf2]/10 px-4 py-2 text-[#7c63d4]">
+                Mentor-Raiz acompanha tudo em tempo real
+              </Badge>
+            </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {missions.map((mission) => {
+                const Icon = mission.icon
+                const statusLabel =
+                  mission.status === "completed"
+                    ? "✅ Concluída"
+                    : mission.status === "available"
+                      ? "🔓 Liberada"
+                      : "🔒 Bloqueada"
+
+                return (
+                  <motion.div
+                    key={mission.key}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className={cn(
+                      "relative flex h-full flex-col justify-between rounded-3xl border bg-white/90 p-6 shadow-[0_12px_32px_rgba(158,124,242,0.08)] transition-all",
+                      mission.status !== "locked"
+                        ? "border-[#d3c8ff] hover:-translate-y-1 hover:border-[#9e7cf2]"
+                        : "border-[#ececff] opacity-80",
+                    )}
+                  >
+                    {mission.isActive ? (
+                      <motion.span
+                        layout
+                        className="absolute -inset-px rounded-[26px] border border-[#9e7cf2]/40"
+                        animate={{ boxShadow: ["0 0 0 0 rgba(158,124,242,0.15)", "0 0 0 12px rgba(158,124,242,0)"] }}
+                        transition={{ repeat: Infinity, duration: 1.8, ease: "easeOut" }}
+                      />
+                    ) : null}
+
+                    <div className="flex items-center justify-between gap-3">
+                      <div
+                        className={cn(
+                          "flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg",
+                          mission.status !== "locked"
+                            ? "bg-gradient-to-br from-[#9e7cf2] to-[#5dd6ff]"
+                            : "bg-[#d8d8f5] text-[#666682]",
+                        )}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <span
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-semibold",
+                          mission.status === "completed"
+                            ? "bg-[#e2fbe1] text-[#1d7a34]"
+                            : mission.status === "available"
+                              ? "bg-[#f1ecff] text-[#5a4aff]"
+                              : "bg-[#f5f5fb] text-[#8b8ba5]",
+                        )}
+                      >
+                        {statusLabel}
+                      </span>
+                    </div>
+
+              <div className="mt-6 space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8f8fb4]">
+                    {mission.agent}
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-[#1f1f33]">{mission.title}</h3>
+                </div>
+                <p className="text-sm text-[#5b5c77]">{mission.description}</p>
+              </div>
+
+              {mission.status !== "locked" ? (
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="mt-6 w-full justify-center rounded-full border border-[#d8d4ff] bg-white text-sm font-semibold text-[#5a4aff] hover:border-[#b9b2ff] hover:bg-[#f4f2ff]"
+                >
+                  <Link href={missionCtaConfig[mission.key].href}>Entrar na missão</Link>
+                </Button>
+              ) : (
+                <p className="mt-6 text-center text-xs text-[#8f8fb4]">
+                  Conclua a etapa anterior para liberar
+                </p>
+              )}
+            </motion.div>
+          )
+        })}
+      </div>
+
+            <div className="mt-8 flex flex-col gap-4 rounded-3xl border border-[#ecebff] bg-[#f8f7ff] p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 text-sm text-[#4d4d6c]">
+                <Unlock className="h-5 w-5 text-[#9e7cf2]" />
+                <p>
+                  <strong>{badgeCatalog[0].title}</strong> desbloqueia assim que você concluir a primeira missão.
+                </p>
+              </div>
+              <Button asChild className="group rounded-full bg-gradient-to-r from-[#9e7cf2] to-[#5dd6ff] px-6 py-5 text-base font-semibold text-white shadow-lg shadow-[#9e7cf2]/30 transition hover:shadow-xl">
+                <Link href={activeMissionCta.href} className="flex items-center gap-2">
+                  {activeMissionCta.label}
+                  <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-[#e2e4ff] bg-white p-8 shadow-xl shadow-[#d6d8ff]/40">
+            <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.35em] text-[#9e7cf2]">
+                  <Flame className="h-5 w-5" />
+                  <span>Próximos Passos</span>
+                </div>
+                <div className="rounded-3xl border border-[#ecebff] bg-[#f7f6ff] p-6 shadow-inner shadow-[#dcdaf7]">
+                  <p className="text-base text-[#4d4d6b]">
+                    Você liberou tudo que precisa para começar agora com o Estrategista. Complete a Missão 1 para que o Copywriter e o Designer entrem em cena.
+                  </p>
+                  <div className="mt-6 flex flex-col gap-4 text-sm text-[#585978]">
+                    <div className="flex items-start gap-3">
+                      <Unlock className="mt-0.5 h-4 w-4 text-[#5a4aff]" />
+                      <span>
+                        <strong>Missão ativa:</strong> {activeMission.title} — {activeMission.agent}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <ArrowRight className="mt-0.5 h-4 w-4 text-[#5a4aff]" />
+                      <span>
+                        Ao concluir, você recebe feedback imediato do Mentor-Raiz e libera acesso ao próximo agente.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden rounded-3xl border border-[#e5ecff] bg-gradient-to-br from-[#f6f7ff] to-white p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8d8ec0]">
+                      Primeira vez aqui?
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-[#1c1c2c]">
+                      Bem-vindo à sua Sala da Marca, {firstName}.
+                    </h3>
+                    <p className="mt-3 text-sm text-[#5c5d7a]">
+                      Aqui é onde estratégia vira clareza — e clareza vira resultado. Vamos começar a construir?
+                    </p>
+                  </div>
+                  <Star className="h-8 w-8 text-[#9e7cf2]" />
+                </div>
+
+                <Button asChild className="mt-6 w-full rounded-full bg-[#1c1c1c] py-5 text-sm font-semibold text-white shadow-lg shadow-[#1c1c1c]/20 transition hover:bg-[#2a2a2a]">
+                  <Link href={activeMissionCta.href} className="force-white flex items-center justify-center text-white">
+                    {activeMissionCta.shortLabel}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+          <section className="relative rounded-3xl border border-[#e2ecff] bg-gradient-to-br from-[#f6f7ff] via-white to-[#f3fbff] p-10 shadow-xl shadow-[#cfe4ff]/40">
+            <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-xl space-y-6">
+                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.3em] text-[#9e7cf2]">
+                  <Medal className="h-5 w-5" />
+                  <span>Reforço de Valor</span>
+                </div>
+                <div className="rounded-3xl border border-[#dcdcff] bg-white/80 p-6 shadow-[0_16px_40px_rgba(158,124,242,0.08)]">
+                  <div className="flex items-start gap-3">
+                    <Brain className="mt-1 h-6 w-6 text-[#9e7cf2]" />
+                    <div>
+                      <p className="font-semibold text-[#2d2d3f]">Mentor-Raiz</p>
+                      <p className="mt-3 text-sm text-[#52526c]">
+                        Cada missão é uma etapa real do seu crescimento de marca.
+                      </p>
+                      <ul className="mt-4 space-y-2 text-sm text-[#565675]">
+                        <li>✔ Uma estratégia clara e diferenciada</li>
+                        <li>✔ Uma mensagem que conecta e vende</li>
+                        <li>✔ Uma identidade visual coerente</li>
+                        <li>✔ Um calendário de postagens pronto</li>
+                        <li>✔ Um plano de melhoria contínua</li>
+                      </ul>
+                      <p className="mt-4 text-sm text-[#52526c]">
+                        Tudo isso aqui dentro, guiado passo a passo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-1 flex-col gap-6 rounded-3xl border border-[#d4defc] bg-white/90 p-6 shadow-[0_18px_46px_rgba(146,167,255,0.2)]">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-[#1f1f33]">Diagnóstico vs Agora</h3>
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-[#dfe3ff] text-xs font-semibold uppercase tracking-widest text-[#5a4aff]"
+                    onClick={() => setDiagnosticModalOpen(true)}
+                  >
+                    Comparar novamente
+                  </Button>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="80%"
+                      data={radarData!.map((item) => ({
+                        subject: item.dimension,
+                        score: item.value,
+                      }))}
+                    >
+                      <PolarGrid stroke="#d4defc" />
+                      <PolarAngleAxis
+                        dataKey="subject"
+                        tick={{ fill: "#6b6c8f", fontSize: 12, fontFamily: "inherit" }}
+                      />
+                      <Radar
+                        name="Diagnóstico"
+                        dataKey="score"
+                        stroke="#9e7cf2"
+                        fill="#9e7cf2"
+                        fillOpacity={0.2}
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-sm text-[#5d5e7b]">
+                  Acompanhe como clareza, consistência, visual, execução e estratégia evoluem conforme você completa cada missão.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-[#dbe4ff] bg-white/95 p-8 shadow-xl shadow-[#d2ddff]/40">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-2xl font-semibold text-[#1c1c1c]">Time Menos Mais (Agentes IA)</h2>
+              <p className="text-sm text-[#5f5f7b]">
+                Cada agente entra em cena conforme novas missões liberam. O Mentor-Raiz envia mensagens automáticas a cada avanço.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {agents.map((agent) => {
+                const Icon = agent.icon
+                const statusBadge =
+                  agent.status === "ativo"
+                    ? { label: "Ativo", className: "bg-[#e6f9ef] text-[#1d7a34]" }
+                    : agent.status === "aguardando"
+                      ? { label: "Aguardando", className: "bg-[#fef6e8] text-[#b8812f]" }
+                      : { label: "Bloqueado", className: "bg-[#f4f4fb] text-[#8181a1]" }
+
+                const card = (
+                  <motion.div
+                    key={agent.key}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="relative flex h-full flex-col justify-between rounded-3xl border border-[#ececff] bg-white/80 p-6 shadow-[0_16px_32px_rgba(90,74,255,0.06)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#9e7cf2]/10 to-[#5dd6ff]/10 text-[#6a55c8]">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", statusBadge.className)}>
+                        {statusBadge.label}
+                      </span>
+                    </div>
+                    <div className="mt-6 space-y-2">
+                      <h3 className="text-lg font-semibold text-[#1f1f33]">{agent.name}</h3>
+                      <p className="text-sm text-[#565671]">{agent.description}</p>
+                    </div>
+                  </motion.div>
+                )
+
+                if (agent.status === "bloqueado" && agent.tooltip) {
+                  return (
+                    <Tooltip key={agent.key}>
+                      <TooltipTrigger asChild>{card}</TooltipTrigger>
+                      <TooltipContent className="max-w-xs rounded-2xl border border-[#e5e7ff] bg-white p-4 text-sm text-[#5c5d80] shadow-lg shadow-[#d0d5ff]/50">
+                        {agent.tooltip}
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
+                return card
+              })}
+            </div>
+          </section>
+        </motion.main>
+
+        <AnimatePresence>
+          {showXpPulse && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="pointer-events-none fixed bottom-10 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#d7d7ff] bg-white/90 px-4 py-2 text-sm font-semibold text-[#5a4aff] shadow-xl shadow-[#c7ccff]/80"
+            >
+              +{data.xpDeltaOnUnlock}XP por desbloquear a Sala da Marca
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showValueToast && (
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ duration: 0.4 }}
+              className="fixed bottom-8 right-8 z-20 max-w-sm rounded-3xl border border-[#e1e1ff] bg-white/95 p-5 shadow-[0_16px_32px_rgba(90,74,255,0.12)]"
+            >
+              <div className="flex items-start gap-3">
+                <Brain className="mt-0.5 h-5 w-5 text-[#9e7cf2]" />
+                <div className="space-y-2 text-sm text-[#50506c]">
+                  <p>
+                    <strong>Mentor-Raiz:</strong> Cada missão é um passo real na construção da sua marca. Continue e me avise quando subir de nível!
+                  </p>
+                  <p className="text-xs text-[#7a7b91]">
+                    Novas mensagens aparecerão sempre que você avançar.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Dialog open={diagnosticModalOpen} onOpenChange={setDiagnosticModalOpen}>
+          <DialogContent className="max-w-2xl rounded-3xl border border-[#dee3ff] bg-white/95 p-8 shadow-[0_30px_60px_rgba(158,124,242,0.18)]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-semibold text-[#1c1c1c]">
+                Diagnóstico Anterior vs Atual
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-6 grid gap-8 md:grid-cols-2">
+              <div className="space-y-4">
+                <p className="text-sm text-[#5f5f7a]">
+                  Confira onde você estava antes de desbloquear a Sala da Marca. Use esse radar para comparar a evolução em clareza, consistência, visual, execução e estratégia.
+                </p>
+                <div className="rounded-3xl border border-[#ececff] bg-[#f8f7ff] p-5 text-sm text-[#595a7a]">
+                  <p className="font-semibold text-[#4b4c6d]">Dica do Mentor:</p>
+                  <p className="mt-2">
+                    Atualize o diagnóstico sempre que finalizar uma missão. Assim, você enxerga o salto de clareza e mantém o time alinhado.
+                  </p>
+                </div>
+              </div>
+              <div className="h-64 w-full rounded-3xl border border-[#e6e9ff] bg-white/80 p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    data={radarData!.map((item) => ({
+                      subject: item.dimension,
+                      score: item.value,
+                    }))}
+                  >
+                    <PolarGrid stroke="#d6d8ff" />
+                    <PolarAngleAxis
+                      dataKey="subject"
+                      tick={{ fill: "#6e6f92", fontSize: 12, fontFamily: "inherit" }}
+                    />
+                    <Radar
+                      name="Diagnóstico Anterior"
+                      dataKey="score"
+                      stroke="#9e7cf2"
+                      fill="#9e7cf2"
+                      fillOpacity={0.2}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
   )
 }
+
+
+
