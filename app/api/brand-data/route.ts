@@ -4,8 +4,16 @@ import { createClient } from "@supabase/supabase-js"
 type BrandRecord = Record<string, any>
 
 const DEFAULT_SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://znkfwlpgsxxawucacmda.supabase.co"
-const HAS_SUPABASE = Boolean(process.env.SUPABASE_KEY)
+  process.env.SUPABASE_URL ??
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://znkfwlpgsxxawucacmda.supabase.co"
+const SUPABASE_KEY =
+  process.env.SUPABASE_KEY ??
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_SERVICE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  ""
+const HAS_SUPABASE = Boolean(SUPABASE_KEY)
 const ENABLE_MOCK = !HAS_SUPABASE || process.env.NEXT_PUBLIC_DASHBOARD_MOCK === "true"
 
 const FALLBACK_STRATEGY = {
@@ -159,7 +167,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, data })
     }
 
-    const supabase = createClient(DEFAULT_SUPABASE_URL, process.env.SUPABASE_KEY as string)
+    const supabase = createClient(DEFAULT_SUPABASE_URL, SUPABASE_KEY)
     const { data, error } = await supabase
       .from("brandplot")
       .select("*")
@@ -266,7 +274,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true })
     }
 
-    const supabase = createClient(DEFAULT_SUPABASE_URL, process.env.SUPABASE_KEY as string)
+    const supabase = createClient(DEFAULT_SUPABASE_URL, SUPABASE_KEY)
 
     const updateObj: Record<string, any> = {}
     if (typeof estrategia !== "undefined") updateObj.estrategia = JSON.stringify(estrategia)
