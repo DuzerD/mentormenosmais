@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -86,6 +86,72 @@ type Message =
       kind: "loading"
       text: string
     }
+
+type BrandRecord = {
+  idUnico?: string | null
+  nome_empresa?: string | null
+  nomeMarca?: string | null
+  nomeEmpresa?: string | null
+  scoreDiagnostico?: string | number | null
+  missaoLiberada?: string | null
+  missoesConcluidas?: string[] | null
+  onboardingMetadata?: string | Record<string, unknown> | null
+  estrategia?: string | Record<string, unknown> | null
+  xpAtual?: number | null
+  xpProximoNivel?: number | null
+  nivelAtual?: string | null
+  comparativoPercentual?: number | null
+  diagnosticoAnterior?: string | Record<string, unknown> | null
+}
+
+type RadarPoint = {
+  dimension: string
+  value: number
+}
+
+const DEFAULT_RADAR_BASE: RadarPoint[] = [
+  { dimension: "Clareza", value: 48 },
+  { dimension: "Consistencia", value: 36 },
+  { dimension: "Visual", value: 28 },
+  { dimension: "Execucao", value: 32 },
+  { dimension: "Estrategia", value: 44 },
+]
+
+function parseRecordField<T>(value: unknown): T | null {
+  if (!value) return null
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+  if (typeof value === "object") {
+    return value as T
+  }
+  return null
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  return null
+}
+
+function toStringValue(value: unknown): string | null {
+  return typeof value === "string" ? value : null
+}
+
+function normalizeMission1Responses(data: typeof initialResponses) {
+  return {
+    q1: data.q1,
+    q1Other: data.q1Other,
+    q2: [...data.q2],
+    q3: data.q3,
+    q4: [...data.q4],
+    q4Other: data.q4Other,
+    q5: data.q5,
+  }
+}
 
 const missionSteps: MissionStep[] = [
   {
@@ -350,8 +416,15 @@ export default function StrategyPage() {
   const [finalSummary, setFinalSummary] = useState<SummaryData | null>(null)
   const [mentorSequenceTriggered, setMentorSequenceTriggered] = useState(false)
   const [introDispatched, setIntroDispatched] = useState(false)
+  const [brandRecord, setBrandRecord] = useState<BrandRecord | null>(null)
+  const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
+  const [strategyData, setStrategyData] = useState<Record<string, unknown> | null>(null)
+  const [lastPersistedSummaryKey, setLastPersistedSummaryKey] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
   const messageCounterRef = useRef(0)
+  const responsesRef = useRef(initialResponses)
+  const persistInFlightRef = useRef(false)
+  const summaryPersistPromiseRef = useRef<Promise<boolean> | null>(null)
 
   const nextMessageId = () => {
     messageCounterRef.current += 1
@@ -359,8 +432,13 @@ export default function StrategyPage() {
   }
 
   useEffect(() => {
+    responsesRef.current = responses
+  }, [responses])
+
+  useEffect(() => {
     if (typeof window === "undefined") return
     const cache = BrandplotCache.get()
+    const cacheName = cache?.companyName ? getFirstName(cache.companyName) : null
     if (cache?.idUnico) {
       setIdUnico(cache.idUnico)
     } else {
@@ -368,9 +446,8 @@ export default function StrategyPage() {
       if (stored) setIdUnico(stored)
     }
 
-    if (cache?.companyName) {
-      setCreatorName(getFirstName(cache.companyName))
-      return
+    if (cacheName) {
+      setCreatorName(cacheName)
     }
 
     const idToFetch = cache?.idUnico ?? window.localStorage?.getItem("brandplot_idUnico")
@@ -381,14 +458,241 @@ export default function StrategyPage() {
         const response = await fetch(`/api/brand-data?idUnico=${encodeURIComponent(idToFetch)}`)
         if (!response.ok) throw new Error("brand-data request failed")
         const result = await response.json()
-        if (result?.data?.nome_empresa) {
-          setCreatorName(getFirstName(result.data.nome_empresa as string))
+        const data = result?.data as BrandRecord | undefined
+        if (!data) return
+
+        setBrandRecord(data)
+
+        const nameFromData =
+          data.nome_empresa ??
+          data.nomeEmpresa ??
+          data.nomeMarca ??
+          (typeof result?.data?.nome_empresa === "string" ? (result.data.nome_empresa as string) : null)
+        if (nameFromData) {
+          setCreatorName(getFirstName(nameFromData))
         }
+
+        const parsedMetadata = parseRecordField<Record<string, unknown>>(data.onboardingMetadata)
+        if (parsedMetadata) {
+          setMetadata(parsedMetadata)
+        }
+
+        const parsedStrategy = parseRecordField<Record<string, unknown>>(data.estrategia)
+        if (parsedStrategy) {
+          setStrategyData(parsedStrategy)
+
+          const mission1Block = parsedStrategy.missao1 as Record<string, unknown> | undefined
+          const storedResponses = mission1Block?.respostas as Record<string, unknown> | undefined
+          if (storedResponses) {
+            setResponses((prev) => ({
+              ...prev,
+              q1: toStringValue(storedResponses.q1) ?? prev.q1,
+              q1Other: toStringValue(storedResponses.q1Other) ?? prev.q1Other,
+              q2: Array.isArray(storedResponses.q2)
+                ? (storedResponses.q2.filter((item): item is string => typeof item === "string") as string[])
+                : prev.q2,
+              q3: toStringValue(storedResponses.q3) ?? prev.q3,
+              q4: Array.isArray(storedResponses.q4)
+                ? (storedResponses.q4.filter((item): item is string => typeof item === "string") as string[])
+                : prev.q4,
+              q4Other: toStringValue(storedResponses.q4Other) ?? prev.q4Other,
+              q5: toStringValue(storedResponses.q5) ?? prev.q5,
+            }))
+          }
+        }
+
+        BrandplotCache.update({
+          idUnico: data.idUnico ?? idToFetch,
+          companyName: nameFromData ?? cacheName ?? undefined,
+          scoreDiagnostico:
+            typeof data.scoreDiagnostico === "number"
+              ? String(data.scoreDiagnostico)
+              : typeof data.scoreDiagnostico === "string"
+                ? data.scoreDiagnostico
+                : undefined,
+        })
       } catch (error) {
         console.warn("Falha ao buscar nome da marca:", error)
       }
     })()
   }, [])
+
+  const persistMissionSummary = useCallback(
+    async (summary: SummaryData) => {
+      if (!idUnico) return
+
+      const responsesSnapshot = responsesRef.current
+      const missionPayload = {
+        respostas: normalizeMission1Responses(responsesSnapshot),
+        resumo: summary,
+        atualizadoEm: new Date().toISOString(),
+      }
+
+      const nextStrategy: Record<string, unknown> = {
+        ...(strategyData ?? {}),
+        missao1: missionPayload,
+      }
+
+      const metadataClone: Record<string, unknown> = metadata ? { ...metadata } : {}
+
+      const completedSet = new Set<string>()
+      const appendCompleted = (value: unknown) => {
+        if (!value) return
+        if (Array.isArray(value)) {
+          value.forEach((item) => {
+            if (typeof item === "string") completedSet.add(item)
+          })
+        }
+      }
+      appendCompleted(metadataClone.missoesConcluidas)
+      appendCompleted(brandRecord?.missoesConcluidas ?? null)
+
+      const alreadyCompleted = completedSet.has("missao_1")
+      completedSet.add("missao_1")
+
+      const baseXp = toNumber(metadataClone.xpAtual) ?? toNumber(brandRecord?.xpAtual) ?? 0
+      const xpAtualizado = alreadyCompleted ? baseXp : baseXp + 80
+
+      const baseXpProximoNivel =
+        toNumber(metadataClone.xpProximoNivel) ?? toNumber(brandRecord?.xpProximoNivel) ?? xpAtualizado + 120
+      const xpProximoNivelAtualizado = Math.max(baseXpProximoNivel, xpAtualizado + 120)
+
+      const baseComparativo =
+        toNumber(metadataClone.comparativoPercentual) ?? toNumber(brandRecord?.comparativoPercentual) ?? 62
+      const comparativoAtualizado = alreadyCompleted ? baseComparativo : Math.max(baseComparativo, 75)
+
+      const nivelBase =
+        toStringValue(metadataClone.nivelAtual) ?? toStringValue(brandRecord?.nivelAtual) ?? "Aprendiz"
+
+      let baseClarity = 62
+      const claritySource = brandRecord?.scoreDiagnostico
+      if (typeof claritySource === "number" && Number.isFinite(claritySource)) {
+        baseClarity = claritySource
+      } else if (typeof claritySource === "string") {
+        const parsed = Number.parseInt(claritySource, 10)
+        if (Number.isFinite(parsed)) {
+          baseClarity = parsed
+        }
+      }
+      const clarityAtualizada = alreadyCompleted ? baseClarity : Math.max(baseClarity, 75)
+
+      const currentLiberada =
+        typeof brandRecord?.missaoLiberada === "string" ? brandRecord?.missaoLiberada : null
+      const missaoLiberadaAtualizada =
+        currentLiberada && (currentLiberada === "missao_2" || currentLiberada === "todas")
+          ? currentLiberada
+          : "missao_2"
+
+      const radarBase =
+        parseRecordField<RadarPoint[]>(metadataClone.diagnosticoAnterior) ??
+        parseRecordField<RadarPoint[]>(brandRecord?.diagnosticoAnterior) ??
+        DEFAULT_RADAR_BASE
+
+      metadataClone.missaoAtual = "missao_2"
+      metadataClone.missoesConcluidas = Array.from(completedSet)
+      metadataClone.xpAtual = xpAtualizado
+      metadataClone.xpProximoNivel = xpProximoNivelAtualizado
+      metadataClone.comparativoPercentual = comparativoAtualizado
+      metadataClone.nivelAtual = nivelBase
+      metadataClone.diagnosticoAnterior = radarBase
+
+      const payload = {
+        idUnico,
+        estrategia: nextStrategy,
+        missaoLiberada: missaoLiberadaAtualizada,
+        onboardingMetadata: metadataClone,
+        xpAtual: xpAtualizado,
+        xpProximoNivel: xpProximoNivelAtualizado,
+        comparativoPercentual: comparativoAtualizado,
+        nivelAtual: nivelBase,
+        scoreDiagnostico: clarityAtualizada,
+        diagnosticoAnterior: radarBase,
+      }
+
+      const response = await fetch("/api/brand-data", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || "Falha ao atualizar dados da missao 1")
+      }
+
+      setStrategyData(nextStrategy)
+      setMetadata(metadataClone)
+      setBrandRecord((prev) => ({
+        ...(prev ?? {}),
+        missaoLiberada: missaoLiberadaAtualizada,
+        estrategia: nextStrategy,
+        onboardingMetadata: metadataClone,
+        xpAtual: xpAtualizado,
+        xpProximoNivel: xpProximoNivelAtualizado,
+        comparativoPercentual: comparativoAtualizado,
+        nivelAtual: nivelBase,
+        scoreDiagnostico: clarityAtualizada,
+        diagnosticoAnterior: radarBase,
+      }))
+
+      const answersForCache = [
+        summary.q1,
+        summary.q3,
+        summary.q5,
+        ...summary.q2,
+        ...summary.q4,
+      ].filter((value): value is string => Boolean(value && value.length > 0))
+
+      const cacheName =
+        brandRecord?.nome_empresa ?? brandRecord?.nomeEmpresa ?? brandRecord?.nomeMarca ?? creatorName
+
+      BrandplotCache.update({
+        idUnico,
+        companyName: cacheName,
+        answers: answersForCache,
+        scoreDiagnostico: String(clarityAtualizada),
+      })
+    },
+    [brandRecord, creatorName, idUnico, metadata, strategyData],
+  )
+
+  const ensureMissionSummarySynced = useCallback(async (): Promise<boolean> => {
+    if (!finalSummary || !idUnico) {
+      return false
+    }
+
+    const summaryKey = JSON.stringify(finalSummary)
+
+    if (!persistInFlightRef.current && summaryKey === lastPersistedSummaryKey) {
+      return true
+    }
+
+    if (summaryPersistPromiseRef.current) {
+      try {
+        return await summaryPersistPromiseRef.current
+      } catch {
+        return false
+      }
+    }
+
+    persistInFlightRef.current = true
+    const promise = (async () => {
+      try {
+        await persistMissionSummary(finalSummary)
+        setLastPersistedSummaryKey(summaryKey)
+        return true
+      } catch (error) {
+        console.error("Falha ao persistir Missao 1:", error)
+        return false
+      } finally {
+        persistInFlightRef.current = false
+        summaryPersistPromiseRef.current = null
+      }
+    })()
+
+    summaryPersistPromiseRef.current = promise
+    return promise
+  }, [finalSummary, idUnico, lastPersistedSummaryKey, persistMissionSummary])
 
   useEffect(() => {
     if (!introDispatched && creatorName) {
@@ -443,6 +747,11 @@ export default function StrategyPage() {
     }
   }, [finalSummary, idUnico])
 
+  useEffect(() => {
+    if (!finalSummary) return
+    ensureMissionSummarySynced()
+  }, [finalSummary, ensureMissionSummarySynced])
+
   const progress = useMemo(() => {
     const completedUnique = unique(completedStages)
     return Math.min(100, Math.round((completedUnique.length / checklistStages.length) * 100))
@@ -466,9 +775,12 @@ export default function StrategyPage() {
     setFinalSummary(null)
     setMentorSequenceTriggered(false)
     setIntroDispatched(false)
+    setLastPersistedSummaryKey(null)
+    persistInFlightRef.current = false
+    responsesRef.current = initialResponses
   }
 
-  function handleAction(action: ActionId, label?: string) {
+  async function handleAction(action: ActionId, label?: string) {
     if (action === "go-dashboard") {
       router.push("/dashboard")
       return
@@ -537,6 +849,10 @@ export default function StrategyPage() {
     }
 
     if (action === "mentor-liberar") {
+      const persisted = await ensureMissionSummarySynced()
+      if (!persisted) {
+        console.warn("Nao foi possivel confirmar a persistencia da Missao 1 antes do redirecionamento.")
+      }
       router.push("/dashboard?unlock=missao_2")
       return
     }
@@ -1233,7 +1549,7 @@ function CtaBlock({
   role: Role
   text?: string
   actions: { id: ActionId; label: string }[]
-  onAction: (action: ActionId, label?: string) => void
+  onAction: (action: ActionId, label?: string) => void | Promise<void>
 }) {
   const alignment = role === "usuario" ? "justify-end" : "justify-center"
   return (
