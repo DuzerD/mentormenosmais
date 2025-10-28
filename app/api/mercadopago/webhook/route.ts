@@ -164,13 +164,49 @@ async function updateBrandRecord(
   })
 }
 
+function computeHmac(secret: string, value: string): string {
+  return crypto.createHmac("sha256", secret).update(value).digest("hex")
+}
+
+function parseSignatureHeader(header: string): Record<string, string> {
+  return header
+    .split(",")
+    .map((part) => part.trim())
+    .reduce<Record<string, string>>((acc, part) => {
+      const [key, rawValue] = part.split("=")
+      if (!key || typeof rawValue === "undefined") {
+        return acc
+      }
+      acc[key.trim().toLowerCase()] = rawValue.trim()
+      return acc
+    }, {})
+}
+
 function validateSignature(secret: string | undefined, payload: string, header: string | null): boolean {
   if (!secret) return true
   if (!header) return false
 
   const normalizedHeader = header.trim()
-  const expected = `sha256=${crypto.createHmac("sha256", secret).update(payload).digest("hex")}`
-  return expected === normalizedHeader
+  const directHash = computeHmac(secret, payload)
+  const directExpected = `sha256=${directHash}`
+
+  if (normalizedHeader === directExpected || normalizedHeader === directHash) {
+    return true
+  }
+
+  const parsed = parseSignatureHeader(normalizedHeader)
+  const candidateHash = parsed.sha256 ?? parsed.signature ?? parsed.hash
+
+  if (!candidateHash) {
+    return false
+  }
+
+  if (candidateHash === directHash) {
+    return true
+  }
+
+  const composed = computeHmac(secret, `${parsed.id ?? ""}${parsed.ts ?? ""}${payload}`)
+  return candidateHash === composed
 }
 
 export async function GET() {
