@@ -1,8 +1,7 @@
-﻿"use client"
+"use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
@@ -163,31 +162,31 @@ const missionSteps: MissionStep[] = [
       {
         label: "Economizar tempo",
         value: "economizar tempo",
-        emoji: "⏱️",
+        emoji: "??",
         description: "Simplificar processos e ganhar horas na agenda.",
       },
       {
         label: "Vender mais",
         value: "vender mais",
-        emoji: "📈",
+        emoji: "??",
         description: "Transformar interesse em vendas com previsibilidade.",
       },
       {
         label: "Parecer mais profissional",
         value: "parecer mais profissional",
-        emoji: "💼",
+        emoji: "??",
         description: "Refinar a imagem para transmitir confiança.",
       },
       {
         label: "Entender melhor o próprio negócio",
         value: "entender melhor o proprio negocio",
-        emoji: "🧠",
+        emoji: "??",
         description: "Organizar ideias e enxergar o caminho estratégico.",
       },
       {
         label: "Outro (campo aberto)",
         value: "Outro",
-        emoji: "✍️",
+        emoji: "??",
         description: "Descreva com suas palavras o resultado que busca.",
       },
     ],
@@ -204,25 +203,25 @@ const missionSteps: MissionStep[] = [
       {
         label: "Pessoas físicas",
         value: "pessoas fisicas (autonomos, criadores)",
-        emoji: "🧑‍🎨",
+        emoji: "?????",
         description: "Autônomos, criadores e profissionais liberais.",
       },
       {
         label: "Pequenas empresas",
         value: "pequenas empresas",
-        emoji: "🏢",
+        emoji: "??",
         description: "Times enxutos que precisam de suporte próximo.",
       },
       {
         label: "Médias e grandes empresas",
         value: "empresas medias/grandes",
-        emoji: "🏙️",
+        emoji: "???",
         description: "Estruturas maiores com processos definidos.",
       },
       {
         label: "Quero começar a vender",
         value: "ainda nao vendo, mas quero comecar",
-        emoji: "🚀",
+        emoji: "??",
         description: "Estou estruturando a oferta para chegar aos primeiros clientes.",
       },
     ],
@@ -246,37 +245,37 @@ const missionSteps: MissionStep[] = [
       {
         label: "Atendimento acolhedor",
         value: "atendimento",
-        emoji: "🤝",
+        emoji: "??",
         description: "Acompanhamento cuidadoso em cada etapa.",
       },
       {
         label: "Qualidade impecável",
         value: "qualidade",
-        emoji: "🏆",
+        emoji: "??",
         description: "Entrega com padrão elevado e consistência.",
       },
       {
         label: "Estética marcante",
         value: "estetica",
-        emoji: "🎨",
+        emoji: "??",
         description: "Visual que chama atenção e reforça a marca.",
       },
       {
         label: "Agilidade no resultado",
         value: "agilidade",
-        emoji: "⚡",
+        emoji: "?",
         description: "Respostas rápidas e execução eficiente.",
       },
       {
         label: "Clareza estratégica",
         value: "clareza",
-        emoji: "🧭",
+        emoji: "??",
         description: "Explica o caminho com segurança e simplicidade.",
       },
       {
         label: "Outro diferencial",
         value: "Outro",
-        emoji: "✨",
+        emoji: "?",
         description: "Compartilhe o que mais destacam sobre você.",
       },
     ],
@@ -293,25 +292,25 @@ const missionSteps: MissionStep[] = [
       {
         label: "Simpática e leve",
         value: "simpatica e leve",
-        emoji: "😊",
+        emoji: "??",
         description: "Conversas acolhedoras, com humor na medida.",
       },
       {
         label: "Direta e objetiva",
         value: "direta e objetiva",
-        emoji: "🎯",
+        emoji: "??",
         description: "Vai ao ponto, sem rodeios ou floreios.",
       },
       {
         label: "Inspiradora",
         value: "inspiradora",
-        emoji: "🌟",
+        emoji: "??",
         description: "Motiva e puxa a visão de futuro.",
       },
       {
         label: "Criativa e divertida",
         value: "criativa e divertida",
-        emoji: "🎭",
+        emoji: "??",
         description: "Cheia de referências, ideias e boas histórias.",
       },
     ],
@@ -702,7 +701,7 @@ export default function StrategyPage() {
           id: nextMessageId(),
           kind: "text",
           role: "estrategista",
-          text: `Oi, ${creatorName}! ✨ Eu sou o Estrategista da Menos Mais — minha missão é te ajudar a encontrar o norte da sua marca, mesmo que você ainda não saiba explicar direito o que faz.`,
+          text: `Oi, ${creatorName}! ? Eu sou o Estrategista da Menos Mais — minha missão é te ajudar a encontrar o norte da sua marca, mesmo que você ainda não saiba explicar direito o que faz.`,
         },
         {
           id: nextMessageId(),
@@ -799,7 +798,7 @@ export default function StrategyPage() {
       const loadingMessage: Message = {
         id: loadingId,
         kind: "loading",
-        text: "✨ Enviando para revisão...",
+        text: "? Enviando para revisão...",
       }
       setMessages((prev) => [...prev, userMessage, loadingMessage])
       setPhase("mentor")
@@ -813,7 +812,7 @@ export default function StrategyPage() {
               id: nextMessageId(),
               kind: "text",
               role: "mentor",
-              text: `Recebi o relatório do Estrategista, ${summaryForMentor.name}. Parabéns por concluir sua primeira missão. 🥳`,
+              text: `Recebi o relatório do Estrategista, ${summaryForMentor.name}. Parabéns por concluir sua primeira missão. ??`,
             },
             {
               id: nextMessageId(),
@@ -838,8 +837,8 @@ export default function StrategyPage() {
               kind: "cta",
               role: "mentor",
               actions: [
-                { id: "mentor-liberar", label: "Sim, quero liberar a Missão 2 ✍️" },
-                { id: "mentor-revisar", label: "Quero revisar meu mapa antes 🗺️" },
+                { id: "mentor-liberar", label: "Sim, quero liberar a Missão 2 ??" },
+                { id: "mentor-revisar", label: "Quero revisar meu mapa antes ???" },
               ],
             },
           ]
@@ -864,7 +863,7 @@ export default function StrategyPage() {
           id: nextMessageId(),
           kind: "text",
           role: "usuario",
-          text: label ?? "Quero revisar meu mapa antes 🗺️",
+          text: label ?? "Quero revisar meu mapa antes ???",
         },
         {
           id: nextMessageId(),
@@ -916,7 +915,7 @@ export default function StrategyPage() {
         id: nextMessageId(),
         kind: "text",
         role: "estrategista",
-        text: `Incrível, ${summary.name}! ✨ Com base nas suas respostas, aqui está o mapa inicial da sua marca.`,
+        text: `Incrível, ${summary.name}! ? Com base nas suas respostas, aqui está o mapa inicial da sua marca.`,
         tone: "celebration",
       }
       const summaryMessage: Message = {
@@ -931,7 +930,7 @@ export default function StrategyPage() {
         role: "estrategista",
         text: "O que você quer fazer agora?",
         actions: [
-          { id: "go-dashboard", label: "Voltar pra Sala" },
+          { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
           { id: "continue-mission2", label: "Enviar para o Mentor aprovar" },
         ],
       }
@@ -1017,35 +1016,44 @@ export default function StrategyPage() {
   }, [completedStages, activeStageId])
   return (
     <ProtectedRoute>
-      <div className="relative min-h-screen w-full overflow-x-hidden bg-slate-950 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-sky-500/10" />
-        <div className="absolute top-[-15%] left-[-10%] h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl" />
-        <div className="absolute bottom-[-25%] right-[-10%] h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
+      <div className="relative min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#f4f0ff] via-[#edf8ff] to-white text-[#211b45]">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-32 top-24 h-80 w-80 rounded-full bg-[#d2c9ff]/60 blur-3xl" />
+          <div className="absolute right-[-160px] top-1/3 h-[420px] w-[420px] rounded-full bg-[#b7ecff]/50 blur-3xl" />
+          <div className="absolute bottom-[-200px] left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[#eef5ff]/70 blur-3xl" />
+        </div>
 
-        <header className="relative z-10 border-b border-white/10">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4 md:px-6">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-white/70 transition-colors hover:border-white/20 hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar pra sala
-            </button>
+        <main className="relative z-10">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-16 pt-10 sm:px-6 lg:px-8">
+            <header className="flex flex-col gap-4 rounded-3xl border border-[#d9d1ff]/60 bg-white/80 p-6 backdrop-blur">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.back()}
+                    className="h-9 w-9 rounded-full border border-[#d9d1ff] bg-white text-[#6c54c2] hover:bg-[#f4f0ff]"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7f6bc8]">Missão 1</p>
+                    <h1 className="mt-1 text-2xl font-semibold text-[#211b45]">Estratégia da Marca</h1>
+                  </div>
+                </div>
+                <div className="rounded-full border border-[#c8d1ff] bg-gradient-to-r from-[#d7c7ff]/60 to-[#c0f0ff]/60 px-4 py-1 text-sm font-semibold text-[#6151c1] shadow-lg shadow-[#c3d2ff]/50">
+                  Estrategista ativo ✨
+                </div>
+              </div>
+              <p className="max-w-2xl text-sm text-[#4d4c6d]">
+                Vamos alinhar o norte da sua marca. Você responde e o Estrategista organiza foco, cliente certo e promessa
+                central para liberar as próximas missões.
+              </p>
+            </header>
 
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                <Image src="/images/brilho-original-logo.png" alt="Mentor Menos Mais" width={28} height={28} />
-              </div>
-              <div className="text-right text-sm">
-                <p className="font-semibold">Missao 1 · Encontrar o Norte</p>
-                <p className="text-white/60">Estrategista de Marca</p>
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="relative z-10 container mx-auto grid gap-8 px-4 py-10 md:px-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="flex min-h-[560px] flex-col rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl lg:p-6">
-            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="flex min-h-[560px] flex-col rounded-3xl border border-[#d9d8ff] bg-white/85 p-4 shadow-[0_24px_60px_rgba(130,118,255,0.12)] backdrop-blur lg:p-6">
+            <div className="flex-1 space-y-4 overflow-y-auto pr-1">
               <AnimatePresence initial={false}>
                 {messages.map((message) => (
                   <motion.div
@@ -1069,7 +1077,7 @@ export default function StrategyPage() {
             </div>
 
             {phase === "input" && currentStep && (
-              <div className="mt-6 rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-inner">
+              <div className="mt-6 rounded-3xl border border-[#dcd8ff] bg-white/90 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
                 {currentStep.type === "text" ? (
                   <textarea
                     value={responses.q3}
@@ -1079,18 +1087,18 @@ export default function StrategyPage() {
                         q3: event.target.value,
                       }))
                     }
-                    className="min-h-[150px] w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder-white/40 focus:border-emerald-300 focus:outline-none focus:ring-0"
+                    className="min-h-[150px] w-full rounded-2xl border border-[#d9d1ff] bg-white px-4 py-3 text-base text-[#322d63] placeholder:text-[#a09bc4] focus:border-[#9b87ff] focus:outline-none focus:ring-0"
                     placeholder={currentStep.placeholder}
                   />
                 ) : (
                   <div className="space-y-4">
-                    <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white/80 px-4 py-3 text-slate-700 shadow-sm">
-                      <span className="text-xl">{currentStep.type === "multi" ? "🧩" : "🎯"}</span>
+                    <div className="mb-4 flex items-center gap-3 rounded-2xl border border-[#e2dcff] bg-[#f7f4ff] px-4 py-3 text-[#2f2a5c] shadow-sm">
+                      <span className="text-xl">{currentStep.type === "multi" ? "??" : "??"}</span>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6bc8]">
                           {currentStep.type === "multi" ? "Múltipla escolha" : "Escolha única"}
                         </p>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-[#5f5d7c]">
                           {currentStep.type === "multi"
                             ? "Marque todas as alternativas que combinam com você."
                             : "Escolha a opção que mais representa seu jeito de atuar."}
@@ -1153,31 +1161,31 @@ export default function StrategyPage() {
                             }}
                             className={`group flex items-center justify-between gap-4 rounded-2xl border px-4 py-4 transition-all ${
                               isSelected
-                                ? "border-emerald-400 bg-emerald-50 shadow-[0_18px_32px_rgba(16,185,129,0.22)]"
-                                : "border-transparent bg-white/80 text-slate-600 hover:border-emerald-200 hover:bg-white"
+                                ? "border-[#bda8ff] bg-gradient-to-r from-[#f4efff] to-[#eefaff] shadow-[0_18px_32px_rgba(130,118,255,0.18)]"
+                                : "border-[#e2dcff] bg-white/85 text-[#4f4c6d] hover:border-[#cebffd] hover:bg-white"
                             }`}
                           >
                             <div className="flex items-center gap-3">
                               <span
                                 className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl transition-all ${
                                   isSelected
-                                    ? "bg-emerald-100 text-emerald-700 shadow-[0_12px_24px_rgba(16,185,129,0.25)]"
-                                    : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+                                    ? "bg-gradient-to-br from-[#a17cff]/20 to-[#5fd6ff]/20 text-[#6a58c8] shadow-[0_12px_24px_rgba(130,118,255,0.22)]"
+                                    : "bg-[#f1edff] text-[#8c83c8] group-hover:bg-[#ebe2ff] group-hover:text-[#6a58c8]"
                                 }`}
                               >
-                                {option.emoji ?? "✨"}
+                                {option.emoji ?? "?"}
                               </span>
                               <div className="space-y-1 text-left">
-                                <p className="text-sm font-semibold text-slate-900">{option.label}</p>
-                                {option.description && <p className="text-xs text-slate-600">{option.description}</p>}
+                                <p className="text-sm font-semibold text-[#2f275d]">{option.label}</p>
+                                {option.description && <p className="text-xs text-[#5f5d7c]">{option.description}</p>}
                               </div>
                             </div>
   
                             <div
                               className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
                                 isSelected
-                                  ? "bg-emerald-500/15 text-emerald-600"
-                                  : "bg-white/80 text-slate-300 group-hover:text-emerald-500"
+                                  ? "bg-[#9b87ff]/15 text-[#6a58c8]"
+                                  : "bg-white/90 text-[#c5c1e6] group-hover:text-[#7d68e0]"
                               }`}
                             >
                               {isMultiChoice ? (
@@ -1208,7 +1216,7 @@ export default function StrategyPage() {
                         q1Other: event.target.value,
                       }))
                     }
-                    className="mt-3 min-h-[120px] w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder-white/40 focus:border-emerald-300 focus:outline-none focus:ring-0"
+                    className="mt-3 min-h-[120px] w-full rounded-2xl border border-[#d9d1ff] bg-white px-4 py-3 text-base text-[#322d63] placeholder:text-[#a09bc4] focus:border-[#9b87ff] focus:outline-none focus:ring-0"
                     placeholder="Conte com suas palavras qual transformacao voce entrega"
                   />
                 )}
@@ -1222,13 +1230,13 @@ export default function StrategyPage() {
                         q4Other: event.target.value,
                       }))
                     }
-                    className="mt-3 min-h-[120px] w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder-white/40 focus:border-emerald-300 focus:outline-none focus:ring-0"
-                    placeholder="Qual é esse outro diferencial que sempre citam?"
+                    className="mt-3 min-h-[120px] w-full rounded-2xl border border-[#d9d1ff] bg-white px-4 py-3 text-base text-[#322d63] placeholder:text-[#a09bc4] focus:border-[#9b87ff] focus:outline-none focus:ring-0"
+                    placeholder="Qual e esse outro diferencial que sempre citam?"
                   />
                 )}
 
                 {validationError && (
-                  <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  <div className="mt-4 rounded-2xl border border-[#f6b7b7] bg-[#fff1f1] px-4 py-3 text-sm text-[#b42318]">
                     {validationError}
                   </div>
                 )}
@@ -1237,7 +1245,7 @@ export default function StrategyPage() {
                   <Button
                     onClick={handleSubmitCurrentStep}
                     disabled={!canProceed}
-                    className="rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition-transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-60"
+                    className="rounded-2xl bg-gradient-to-r from-[#a17cff] to-[#5fd6ff] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[#b9b0ff]/50 transition-transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-60"
                   >
                     Registrar etapa
                   </Button>
@@ -1246,14 +1254,14 @@ export default function StrategyPage() {
             )}
           </section>
           <aside className="space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg">
+            <div className="rounded-3xl border border-[#d9d8ff] bg-white/85 p-6 shadow-[0_18px_44px_rgba(120,108,255,0.15)]">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Progresso</span>
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{progress}%</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7f6bc8]">Progresso</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6a58c8]">{progress}%</span>
               </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#ece9ff]">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400"
+                  className="h-full rounded-full bg-gradient-to-r from-[#a17cff] via-[#7d68e0] to-[#5fd6ff]"
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.45, ease: "easeOut" }}
                 />
@@ -1266,24 +1274,24 @@ export default function StrategyPage() {
                       key={stage.id}
                       className={`flex items-start gap-3 rounded-2xl border px-4 py-3 ${
                         status === "done"
-                          ? "border-emerald-300/40 bg-emerald-300/10 text-white"
+                          ? "border-[#c9f0d9] bg-[#f1fff6] text-[#276348]"
                           : status === "active"
-                            ? "border-white/25 bg-white/10 text-white"
-                            : "border-white/10 bg-white/5 text-white/60"
+                            ? "border-[#d9d5ff] bg-[#f6f4ff] text-[#3f398c]"
+                            : "border-[#e4e2ff] bg-white text-[#8c89ab]"
                       }`}
                     >
                       <div className="mt-0.5">
                         {status === "done" ? (
-                          <Check className="h-4 w-4 text-emerald-300" />
+                          <Check className="h-4 w-4 text-[#2f9460]" />
                         ) : status === "active" ? (
-                          <CircleDot className="h-4 w-4 text-sky-300" />
+                          <CircleDot className="h-4 w-4 text-[#7d68e0]" />
                         ) : (
-                          <Circle className="h-4 w-4 text-white/30" />
+                          <Circle className="h-4 w-4 text-[#cbc9e8]" />
                         )}
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-white/50">{stage.title}</p>
-                        <p className="text-sm font-medium">{stage.description}</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[#8c83c8]">{stage.title}</p>
+                        <p className="text-sm font-medium text-[#2f275d]">{stage.description}</p>
                       </div>
                     </div>
                   )
@@ -1291,24 +1299,26 @@ export default function StrategyPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-emerald-300/30 bg-emerald-400/10 p-6 shadow-lg">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">Missao ativa</p>
-              <h3 className="mt-3 text-lg font-semibold text-white">Entrar na Missao 1</h3>
-              <p className="mt-2 text-sm text-white/80">
+            <div className="rounded-3xl border border-[#d9f0ff] bg-[#f0fbff] p-6 shadow-[0_16px_40px_rgba(95,214,255,0.12)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7ca5]">Missao ativa</p>
+              <h3 className="mt-3 text-lg font-semibold text-[#1f4560]">Entrar na Missao 1</h3>
+              <p className="mt-2 text-sm text-[#4f6d80]">
                 Complete as etapas e envie ao Mentor-Raiz. O Copywriter so libera a Missao 2 depois deste alinhamento.
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-white/75">
+              <ul className="mt-4 space-y-2 text-sm text-[#3f6279]">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <CheckCircle2 className="h-4 w-4 text-[#6ab7d6]" />
                   5 etapas guiadas com feedback imediato
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <CheckCircle2 className="h-4 w-4 text-[#6ab7d6]" />
                   Resumo automatico pronto para o Mentor-Raiz
                 </li>
               </ul>
             </div>
           </aside>
+            </div>
+          </div>
         </main>
       </div>
     </ProtectedRoute>
@@ -1327,9 +1337,9 @@ function ChatMessage({
 }) {
   if (message.kind === "question") {
     return (
-      <div className="mx-auto w-full rounded-3xl border border-emerald-100 bg-white/95 px-6 py-5 text-slate-900 shadow-[0_16px_32px_rgba(16,185,129,0.16)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">{message.stageTitle}</p>
-        <p className="mt-2 text-lg font-semibold text-slate-900">{message.question}</p>
+      <div className="mx-auto w-full rounded-3xl border border-[#d9d5ff] bg-white px-6 py-5 text-[#211b45] shadow-[0_16px_32px_rgba(120,108,255,0.16)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d68e0]">{message.stageTitle}</p>
+        <p className="mt-2 text-lg font-semibold text-[#211b45]">{message.question}</p>
       </div>
     )
   }
@@ -1337,8 +1347,8 @@ function ChatMessage({
   if (message.kind === "loading") {
     return (
       <div className="flex w-full justify-center">
-        <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
-          <Loader2 className="h-4 w-4 animate-spin" />
+        <div className="flex items-center gap-3 rounded-full border border-[#e1defb] bg-white/80 px-4 py-2 text-sm text-[#5f5d7c] shadow">
+          <Loader2 className="h-4 w-4 animate-spin text-[#7d68e0]" />
           {message.text}
         </div>
       </div>
@@ -1376,20 +1386,20 @@ function TextBubble({
 
   const baseClasses =
     role === "usuario"
-      ? "force-white bg-gradient-to-r from-emerald-400 to-sky-500 text-white shadow-[0_16px_32px_rgba(14,165,233,0.22)]"
+      ? "force-white bg-gradient-to-r from-[#6a58c8] to-[#5fd6ff] text-white shadow-[0_16px_32px_rgba(130,118,255,0.24)]"
       : role === "mentor"
-        ? "border border-blue-200/70 bg-gradient-to-br from-white via-blue-50 to-sky-50 text-slate-900 shadow-[0_18px_36px_rgba(59,130,246,0.15)]"
+        ? "border border-[#d7f0ff] bg-[#f0fbff] text-[#2f536a] shadow-[0_18px_36px_rgba(95,214,255,0.16)]"
         : role === "estrategista"
-          ? "border border-emerald-200/70 bg-gradient-to-br from-white via-emerald-50 to-teal-50 text-slate-900 shadow-[0_18px_40px_rgba(16,185,129,0.18)]"
-          : "border border-slate-200 bg-white/90 text-slate-700 shadow-[0_16px_32px_rgba(15,23,42,0.08)]"
+          ? "border border-[#d5c8ff] bg-gradient-to-br from-white via-[#f7f5ff] to-[#ebf9ff] text-[#312d63] shadow-[0_18px_40px_rgba(130,118,255,0.18)]"
+          : "border border-[#e5e3ff] bg-white/95 text-[#4f4e6d] shadow-[0_16px_32px_rgba(15,23,42,0.08)]"
 
   const toneClasses =
     tone === "feedback"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-900 shadow-[0_16px_32px_rgba(16,185,129,0.22)]"
+      ? "border-[#c9f0d9] bg-[#f6fff8] text-[#276348] shadow-[0_16px_32px_rgba(76,175,80,0.18)]"
       : tone === "system"
-        ? "border-sky-200 bg-sky-50 text-slate-700 shadow-[0_12px_24px_rgba(56,189,248,0.14)]"
+        ? "border-[#c6e7ff] bg-[#eef9ff] text-[#2f536a] shadow-[0_12px_24px_rgba(95,214,255,0.14)]"
         : tone === "celebration"
-          ? "border-amber-200 bg-amber-50 text-amber-900 shadow-[0_18px_36px_rgba(251,191,36,0.24)]"
+          ? "border-[#fbe2a6] bg-[#fff8e7] text-[#8a5b13] shadow-[0_18px_36px_rgba(251,191,36,0.2)]"
           : ""
 
   return (
@@ -1398,8 +1408,8 @@ function TextBubble({
         <div
           className={`mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold shadow-md ${
             role === "mentor"
-              ? "force-white bg-gradient-to-br from-indigo-500 to-sky-500"
-              : "force-white bg-gradient-to-br from-emerald-500 to-sky-400"
+              ? "force-white bg-gradient-to-br from-[#7d68e0] to-[#5fd6ff]"
+              : "force-white bg-gradient-to-br from-[#a17cff] to-[#5fd6ff]"
           }`}
         >
           {role === "mentor" ? "MR" : "ES"}
@@ -1427,44 +1437,44 @@ function SummaryCard({
   canAdjust: boolean
 }) {
   const headerTitle = role === "mentor" ? "Resumo validado da Missao 1" : "Missao 1 concluida"
-  const introText = role === "mentor" ? "Aqui está o que alinhamos com o Estrategista:" : "Aqui está o mapa inicial da sua marca:"
+  const introText = role === "mentor" ? "Aqui esta o que alinhamos com o Estrategista:" : "Aqui esta o mapa inicial da sua marca:"
 
   return (
-    <div className="w-full rounded-3xl border border-emerald-300/40 bg-gradient-to-br from-emerald-400/15 via-slate-900/60 to-sky-500/15 p-6 text-white shadow-xl md:p-8">
+    <div className="w-full rounded-3xl border border-[#d5c8ff] bg-gradient-to-br from-[#f3f0ff] via-white to-[#edfbff] p-6 text-[#312d63] shadow-[0_24px_60px_rgba(120,108,255,0.18)] md:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">{headerTitle}</p>
-          <h2 className="mt-2 text-2xl font-semibold">Incrivel, {summary.name}!</h2>
-          <p className="mt-1 text-sm text-white/80">{introText}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d68e0]">{headerTitle}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-[#211b45]">Incrivel, {summary.name}!</h2>
+          <p className="mt-1 text-sm text-[#5f5d7c]">{introText}</p>
         </div>
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-sky-500 text-white shadow-lg shadow-emerald-500/30">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#a17cff] to-[#5fd6ff] text-white shadow-lg shadow-[#b9b0ff]/40">
           <Sparkles className="h-7 w-7" />
         </div>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <SummaryLine icon={<Target className="h-5 w-5" />} label="Voce ajuda as pessoas a">
+        <SummaryLine icon={<Target className="h-5 w-5 text-[#7d68e0]" />} label="Voce ajuda as pessoas a">
           {summary.q1 || "destravar a transformacao certa"}
         </SummaryLine>
-        <SummaryLine icon={<Users className="h-5 w-5" />} label="Quem mais valoriza isso">
+        <SummaryLine icon={<Users className="h-5 w-5 text-[#7d68e0]" />} label="Quem mais valoriza isso">
           {formatList(summary.q2.length ? summary.q2 : ["clientes em busca de clareza"])}
         </SummaryLine>
-        <SummaryLine icon={<MessageCircle className="h-5 w-5" />} label="Como querem lembrar de voce">
+        <SummaryLine icon={<MessageCircle className="h-5 w-5 text-[#7d68e0]" />} label="Como querem lembrar de voce">
           {summary.q3 || "uma marca que conduz com confianca"}
         </SummaryLine>
-        <SummaryLine icon={<Star className="h-5 w-5" />} label="Seu diferencial está em">
+        <SummaryLine icon={<Star className="h-5 w-5 text-[#7d68e0]" />} label="Seu diferencial esta em">
           {formatList(summary.q4.length ? summary.q4 : ["um jeito unico de cuidar de cada cliente"])}
         </SummaryLine>
-        <SummaryLine icon={<Volume2 className="h-5 w-5" />} label="Tom de voz da marca">
+        <SummaryLine icon={<Volume2 className="h-5 w-5 text-[#7d68e0]" />} label="Tom de voz da marca">
           {summary.q5 || "cheio de clareza e presenca"}
         </SummaryLine>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="rounded-3xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
+        <div className="rounded-3xl border border-[#e4e2ff] bg-white/90 p-4 text-sm text-[#4f4e6d]">
           {role === "mentor" ? (
             <p>
-              Essa base segue para o Copywriter transformar em mensagens que vendem. Qualquer ajuste que fizer por aqui é
+              Essa base segue para o Copywriter transformar em mensagens que vendem. Qualquer ajuste que fizer por aqui e
               atualizado automaticamente para o time inteiro.
             </p>
           ) : (
@@ -1473,26 +1483,26 @@ function SummaryCard({
               entra em campo para transformar tudo em mensagens que vendem.
             </p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/60">
-            <span className="rounded-full border border-white/20 px-3 py-1">Estrategista · Missao 1</span>
-            <span className="rounded-full border border-white/20 px-3 py-1">
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.24em] text-[#8c83c8]">
+            <span className="rounded-full border border-[#d9d5ff] px-3 py-1">Estrategista - Missao 1</span>
+            <span className="rounded-full border border-[#d9d5ff] px-3 py-1">
               {role === "mentor" ? "Validado pelo Mentor-Raiz" : "Plano em andamento"}
             </span>
           </div>
         </div>
-        <div className="rounded-3xl border border-emerald-300/40 bg-emerald-300/15 p-4 text-sm text-emerald-50 shadow-inner">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100">Gamificacao</p>
+        <div className="rounded-3xl border border-[#d7f0ff] bg-[#f0fbff] p-4 text-sm text-[#2f536a] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3a7ca5]">Gamificacao</p>
           <div className="mt-3 space-y-2">
             <p className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-emerald-200" />
-              +80 XP · Marca com Norte
+              <Sparkles className="h-4 w-4 text-[#6ab7d6]" />
+              +80 XP - Marca com Norte
             </p>
             <p className="flex items-center gap-2">
-              <Rocket className="h-4 w-4 text-emerald-200" />
-              Clareza 62% ? 75%
+              <Rocket className="h-4 w-4 text-[#6ab7d6]" />
+              Clareza 62% -> 75%
             </p>
             <p className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-200" />
+              <CheckCircle2 className="h-4 w-4 text-[#6ab7d6]" />
               Selo desbloqueado: Marca com Norte
             </p>
           </div>
@@ -1504,14 +1514,14 @@ function SummaryCard({
           <Button
             variant="secondary"
             onClick={onAdjust}
-            className="rounded-2xl border border-white/10 bg-white/10 text-sm text-white hover:border-white/20 hover:bg-white/20"
+            className="rounded-2xl border border-[#d9d1ff] bg-white text-sm text-[#6a58c8] hover:bg-[#f4f0ff]"
           >
             Ajustar respostas
           </Button>
           <Button
             variant="secondary"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="rounded-2xl border border-white/10 bg-white/10 text-sm text-white/80 hover:border-white/20 hover:bg-white/20"
+            className="rounded-2xl border border-[#d9d1ff] bg-white text-sm text-[#6a58c8] hover:bg-[#f4f0ff]"
           >
             Revisar etapas
           </Button>
@@ -1530,11 +1540,11 @@ function SummaryLine({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm">
-      <div className="mt-1 text-emerald-200">{icon}</div>
+    <div className="flex items-start gap-3 rounded-2xl border border-[#e1ddff] bg-white/90 px-4 py-3 text-sm text-[#312d63]">
+      <div className="mt-1">{icon}</div>
       <div>
-        <p className="text-xs uppercase tracking-[0.18em] text-white/60">{label}</p>
-        <p className="mt-1 text-white">{children}</p>
+        <p className="text-xs uppercase tracking-[0.24em] text-[#7f6bc8]">{label}</p>
+        <p className="mt-1 text-sm text-[#312d63]">{children}</p>
       </div>
     </div>
   )
@@ -1554,14 +1564,14 @@ function CtaBlock({
   const alignment = role === "usuario" ? "justify-end" : "justify-center"
   return (
     <div className={`flex w-full ${alignment}`}>
-      <div className="flex max-w-[80%] flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/10 px-5 py-4 text-sm text-white">
-        {text && <p className="text-center text-sm text-white/80">{text}</p>}
+      <div className="flex max-w-[80%] flex-col items-center gap-4 rounded-3xl border border-[#d5c8ff] bg-[#f7f4ff] px-5 py-4 text-sm text-[#2f2a5c] shadow-[0_18px_44px_rgba(120,108,255,0.12)]">
+        {text && <p className="text-center text-sm text-[#2f2a5c]">{text}</p>}
         <div className="flex flex-wrap justify-center gap-3">
           {actions.map((action) => (
             <Button
               key={action.id}
               onClick={() => onAction(action.id, action.label)}
-              className="rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 hover:scale-[1.01]"
+              className="rounded-2xl bg-gradient-to-r from-[#a17cff] to-[#5fd6ff] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[#b9b0ff]/40 hover:scale-[1.01]"
             >
               {action.label}
             </Button>
@@ -1571,6 +1581,8 @@ function CtaBlock({
     </div>
   )
 }
+
+
 
 
 

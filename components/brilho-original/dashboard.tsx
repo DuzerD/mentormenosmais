@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import type { LucideIcon } from "lucide-react"
@@ -36,6 +36,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 import { BrandplotCache } from "@/lib/brandplot-cache"
 import { MentorRaizChat } from "./mentor-raiz-chat"
+
+const DASHBOARD_INTRO_STORAGE_KEY = "mm_dashboard_intro_seen"
 
 type MissionKey = "missao_1" | "missao_2" | "missao_3" | "missao_4" | "missao_5"
 
@@ -549,29 +551,49 @@ function mergeDashboardData(
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData>(defaultDashboardData)
-  const [isIntroVisible, setIsIntroVisible] = useState(true)
+  const [isIntroVisible, setIsIntroVisible] = useState(false)
+  const [introWasTriggered, setIntroWasTriggered] = useState(false)
   const [showXpPulse, setShowXpPulse] = useState(false)
   const [showValueToast, setShowValueToast] = useState(false)
   const [diagnosticModalOpen, setDiagnosticModalOpen] = useState(false)
 
   useEffect(() => {
-    const INTRO_HIDE_DELAY = 6000
-    const XP_PULSE_HIDE_DELAY = 10000
+    if (typeof window === "undefined") return
+    const hasSeenIntro = window.localStorage.getItem(DASHBOARD_INTRO_STORAGE_KEY)
+    if (!hasSeenIntro) {
+      setIsIntroVisible(true)
+      setIntroWasTriggered(true)
+      window.localStorage.setItem(DASHBOARD_INTRO_STORAGE_KEY, "true")
+    }
+  }, [])
 
-    const unlockTimer = window.setTimeout(() => {
+  useEffect(() => {
+    if (!introWasTriggered) return
+
+    const INTRO_HIDE_DELAY = 8000
+    const timer = window.setTimeout(() => {
       setIsIntroVisible(false)
+      setIntroWasTriggered(false)
       setShowXpPulse(true)
     }, INTRO_HIDE_DELAY)
 
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [introWasTriggered])
+
+  useEffect(() => {
+    if (!showXpPulse) return
+
+    const XP_PULSE_HIDE_DELAY = 10000
     const xpTimer = window.setTimeout(() => {
       setShowXpPulse(false)
     }, XP_PULSE_HIDE_DELAY)
 
     return () => {
-      window.clearTimeout(unlockTimer)
       window.clearTimeout(xpTimer)
     }
-  }, [])
+  }, [showXpPulse])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -629,6 +651,12 @@ export default function Dashboard() {
     loadData()
   }, [])
 
+  const dismissIntro = useCallback(() => {
+    setIsIntroVisible(false)
+    setIntroWasTriggered(false)
+    setShowXpPulse(true)
+  }, [])
+
   const missions = useMemo(() => computeMissionDisplays(data), [data])
   const agents = useMemo(() => computeAgentDisplays(missions), [missions])
   const firstName = useMemo(() => extractFirstName(data.userName), [data.userName])
@@ -663,47 +691,60 @@ export default function Dashboard() {
         <AnimatePresence>
           {isIntroVisible && (
             <motion.div
-              className="fixed inset-0 z-30 flex items-center justify-center bg-[#0b0820]/80 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="fixed inset-x-4 bottom-6 z-30 flex justify-end sm:inset-auto sm:right-6 sm:bottom-6"
             >
-              <motion.div
-                initial={{ scale: 0.92, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="force-white w-[min(90%,420px)] rounded-3xl border border-white/25 bg-[#110c2f]/90 p-8 text-white shadow-[0_24px_70px_rgba(0,0,0,0.4)] backdrop-blur-2xl"
-              >
-                <div className="flex items-center gap-3 text-sm font-medium uppercase tracking-[0.3em] text-white/80">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Liberacao confirmada</span>
+              <div className="flex w-full max-w-[360px] items-end gap-3">
+                <div className="hidden h-10 w-10 flex-none items-center justify-center rounded-full bg-gradient-to-br from-[#f0e9ff] to-[#d5f4ff] text-[#6c58c8] shadow-lg shadow-[#bbc6ff]/40 sm:flex">
+                  <Sparkles className="h-5 w-5" />
                 </div>
-                <div className="mt-6 space-y-4 text-[0.95rem] leading-relaxed text-white">
-                  <p>
-                    Excelente decisao,{" "}
-                    <span className="font-semibold text-white">{firstName}</span>! Seu investimento foi confirmado e o
-                    time Menos Mais ja esta a postos.
-                  </p>
-                  <p>
-                    Voce agora tem acesso total a sua <strong>Sala da Marca</strong> - o centro de comando onde vamos
-                    Voce agora tem acesso total a sua <strong>Sala da Marca</strong> - o centro de comando onde vamos
-                    acompanhar seu progresso, suas missoes e sua evolucao em clareza.
-                  </p>
-                  <p>Vamos dar uma olhada?</p>
+                <div className="relative w-full rounded-3xl border border-[#e0dcff] bg-white/95 px-5 py-4 text-[#211b45] shadow-[0_20px_45px_rgba(120,108,255,0.18)] backdrop-blur-md">
+                  <div className="flex items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-[#7f6bc8]">
+                    <Sparkles className="h-3.5 w-3.5 text-[#9c89ff]" />
+                    <span>Liberacao confirmada</span>
+                  </div>
+                  <div className="mt-4 space-y-3 text-sm leading-relaxed text-[#3b3762]">
+                    <p>
+                      Excelente decisao,{" "}
+                      <span className="font-semibold text-[#211b45]">{firstName || "por aqui"}</span>! Seu investimento
+                      foi confirmado e o time Menos Mais ja esta a postos.
+                    </p>
+                    <p>
+                      Voce agora tem acesso total a sua <strong>Sala da Marca</strong>, nosso centro de comando para
+                      acompanhar progresso, missoes e evolucao em clareza.
+                    </p>
+                    <p className="font-semibold text-[#211b45]">Vamos dar uma olhada?</p>
+                  </div>
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={dismissIntro}
+                      className="rounded-full bg-gradient-to-r from-[#a17cff] to-[#5fd6ff] px-4 py-2 text-xs font-semibold text-white shadow-none transition hover:from-[#8f78ff] hover:to-[#54cfff]"
+                    >
+                      Vamos la
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={dismissIntro}
+                      className="text-xs font-medium uppercase tracking-[0.3em] text-[#7f6bc8] transition hover:text-[#5f52b8]"
+                    >
+                      Depois
+                    </button>
+                  </div>
+                  <span className="absolute bottom-5 -left-2 hidden h-5 w-5 rotate-45 border-b border-l border-[#e0dcff] bg-white/95 sm:block" />
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
         <motion.main
           initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: isIntroVisible ? 0 : 1, y: isIntroVisible ? 24 : 0 }}
-          transition={{ delay: isIntroVisible ? 0.4 : 0.2, duration: 0.6, ease: "easeOut" }}
-          className={cn(
-            "mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 pb-10 pt-16 sm:px-6 lg:px-10",
-            isIntroVisible && "pointer-events-none select-none",
-          )}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 pb-10 pt-16 sm:px-6 lg:px-10"
         >
           <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
             <section className="flex flex-1 flex-col justify-between rounded-3xl border border-[#e2e2f6] bg-white/90 p-8 shadow-xl shadow-[#c8d6ff]/20">

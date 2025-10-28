@@ -1153,7 +1153,7 @@ function Mission2Experience() {
 
   const showInputArea = phase === "collectingPhrase" && !loadingStage
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#f4f0ff] via-[#edf8ff] to-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-[#f4f0ff] via-[#edf8ff] to-white">
       <MotionDiv
         aria-hidden
         initial={{ opacity: 0 }}
