@@ -24,6 +24,7 @@ export async function POST(request: Request) {
           email,
           company: "Marca Demo",
           idUnico: "demo-brandplot",
+          missaoLiberada: "missao_3",
         },
         message: "Login de protótipo efetuado",
       })
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 
     const { data: users, error: selectError } = await supabase
       .from("brandplot")
-      .select("id, nome_cliente, email, senha, nome_empresa, idUnico")
+      .select("id, nome_cliente, email, senha, nome_empresa, idUnico, missaoLiberada")
       .eq("email", email.toLowerCase().trim())
 
     if (selectError) {
@@ -56,12 +57,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Senha incorreta" }, { status: 401 })
     }
 
+    if (!user.missaoLiberada) {
+      return NextResponse.json(
+        {
+          error:
+            "Seu pagamento ainda está em processamento. Assim que o Mercado Pago confirmar, enviaremos o acesso por e-mail.",
+        },
+        { status: 403 },
+      )
+    }
+
     const userResponse = {
       id: user.id,
       name: user.nome_cliente,
       email: user.email,
       company: user.nome_empresa,
       idUnico: user.idUnico,
+      missaoLiberada: user.missaoLiberada,
     }
 
     return NextResponse.json({
@@ -74,4 +86,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 })
   }
 }
-
