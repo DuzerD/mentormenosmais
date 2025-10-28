@@ -238,6 +238,23 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const maybeStatus =
+      typeof error === "object" && error !== null && "status" in error
+        ? (error as { status?: number }).status
+        : undefined
+    const maybeMessage =
+      typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message?: unknown }).message)
+        : ""
+
+    const isNotFound =
+      maybeStatus === 404 || maybeStatus === 400 || maybeMessage.toLowerCase().includes("not found")
+
+    if (isNotFound) {
+      console.warn("MercadoPago webhook: pagamento informado não encontrado, ignorando.", error)
+      return NextResponse.json({ ignored: true })
+    }
+
     console.error("MercadoPago webhook: erro ao processar pagamento:", error)
     return NextResponse.json({ error: "Erro ao processar pagamento" }, { status: 500 })
   }
