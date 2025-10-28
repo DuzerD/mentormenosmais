@@ -514,6 +514,53 @@ function Mission2Experience() {
     })
   }
 
+  async function openMercadoPagoCheckout() {
+    if (!idUnico) {
+      toast({
+        title: "Ops, falta uma informação",
+        description: "Não consegui localizar seu cadastro. Faça login novamente ou fale com o suporte.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      toast({
+        title: "Gerando checkout",
+        description: "Abrindo o pagamento seguro do Mercado Pago em uma nova aba.",
+      })
+
+      const response = await fetch("/api/mercadopago/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idUnico, product: "missao_3" }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(text || "Falha ao criar preferência de pagamento")
+      }
+
+      const json = (await response.json()) as { init_point?: string | null; sandbox_init_point?: string | null }
+      const checkoutUrl = json.init_point ?? json.sandbox_init_point
+
+      if (!checkoutUrl) {
+        throw new Error("Não recebi o link do checkout")
+      }
+
+      if (typeof window !== "undefined") {
+        window.open(checkoutUrl, "_blank", "noopener")
+      }
+    } catch (error) {
+      console.error("Falha ao iniciar checkout da Missão 3:", error)
+      toast({
+        title: "Não consegui abrir o checkout",
+        description: "Tente novamente em instantes ou fale com o time de suporte.",
+        variant: "destructive",
+      })
+    }
+  }
+
   useEffect(() => {
     if (typeof window === "undefined") return
     const cache = BrandplotCache.get()
@@ -707,11 +754,7 @@ function Mission2Experience() {
     }
 
     if (actionId === "unlock-mission3") {
-      toast({
-        title: "Checkout da Missão 3",
-        description: "Abrindo o checkout seguro no Mercado Pago para você avançar com o Designer.",
-      })
-      router.push("https://mpago.la/1Zj94S5")
+      void openMercadoPagoCheckout()
       return
     }
 

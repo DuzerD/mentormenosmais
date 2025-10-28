@@ -1098,15 +1098,44 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
       return false
     }
   }
+  const createCheckoutPreference = async (plan: PlanOption): Promise<string | null> => {
+    const idUnico = resolveIdUnico()
+    if (!idUnico) return null
+    try {
+      const response = await fetch("/api/mercadopago/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idUnico,
+          product: plan.liberacao,
+          planId: plan.id,
+          returnPath: "/dashboard",
+        }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(text || "Falha ao gerar checkout no Mercado Pago")
+      }
+
+      const json = (await response.json()) as { init_point?: string | null; sandbox_init_point?: string | null }
+      return json.init_point ?? json.sandbox_init_point ?? null
+    } catch (error) {
+      console.error("Erro ao abrir checkout do Mercado Pago:", error)
+      return null
+    }
+  }
   const handlePlanSelect = async (plan: PlanOption) => {
     if (isSaving) return
     setSelectedPlan(plan.id)
     setStatusMessage(null)
     setErrorMessage(null)
     let saved = false
+    let checkoutUrl: string | null = null
     try {
       setIsSaving(true)
       saved = await persistSelection(plan)
+      checkoutUrl = await createCheckoutPreference(plan)
       if (saved) {
         setStatusMessage("Plano registrado. Assim que o pagamento confirmar, a missão correspondente será liberada automaticamente.")
         router.push("/dashboard")
@@ -1118,10 +1147,14 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
       setErrorMessage("O registro automático falhou. Finalize o desbloqueio e nos avise pelo suporte, combinado?")
     } finally {
       setIsSaving(false)
-      try {
-        window.open(plan.checkoutUrl, "_blank", "noopener")
-      } catch (openError) {
-        console.warn("Não foi possível abrir a página de checkout automaticamente:", openError)
+      const fallbackUrl = plan.checkoutUrl
+      const urlToOpen = checkoutUrl ?? fallbackUrl
+      if (urlToOpen) {
+        try {
+          window.open(urlToOpen, "_blank", "noopener")
+        } catch (openError) {
+          console.warn("Não foi possível abrir a página de checkout automaticamente:", openError)
+        }
       }
     }
   }

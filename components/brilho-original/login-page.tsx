@@ -472,18 +472,26 @@ export default function LoginPage() {
                     </div>
                   </motion.div>
                 )}
-              </AnimatePresence>              {isLogin && (
+              </AnimatePresence>
+              {isLogin && (
                 <div className="flex justify-end">
                   <Link href="/forgot-password" className="text-sm text-[#c8b79e] hover:text-[#d0c0a8] transition-colors">
                     Esqueci minha senha
                   </Link>
-                </div>              )}
+                </div>
+              )}
 
               {error && (
                 <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                  {error}
+                  <p>{error}</p>
+                  {error.toLowerCase().includes("pagamento") && (
+                    <p className="mt-1 text-xs text-red-200/80">
+                      Se o pagamento já foi aprovado, aguarde alguns minutos ou contate suporte@menosmais.app com o comprovante.
+                    </p>
+                  )}
                 </div>
-              )}              <button
+              )}
+              <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full group relative px-8 py-4 bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-[#1a1814]/40 hover:shadow-xl hover:shadow-[#1a1814]/50 hover:scale-105 border border-[#c8b79e]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
