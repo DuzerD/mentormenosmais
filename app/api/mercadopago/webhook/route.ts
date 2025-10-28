@@ -187,7 +187,8 @@ function validateSignature(secret: string | undefined, payload: string, header: 
   if (!header) return false
 
   const normalizedHeader = header.trim()
-  const directHash = computeHmac(secret, payload)
+  const normalizedPayload = payload.replace(/\s+/g, "")
+  const directHash = computeHmac(secret, normalizedPayload)
   const directExpected = `sha256=${directHash}`
 
   if (normalizedHeader === directExpected || normalizedHeader === directHash) {
@@ -195,7 +196,7 @@ function validateSignature(secret: string | undefined, payload: string, header: 
   }
 
   const parsed = parseSignatureHeader(normalizedHeader)
-  const candidateHash = parsed.sha256 ?? parsed.signature ?? parsed.hash
+  const candidateHash = parsed.sha256 ?? parsed.signature ?? parsed.hash ?? parsed.v1
 
   if (!candidateHash) {
     console.warn("MercadoPago webhook: assinatura inválida (hash ausente)", { header, parsed })
@@ -206,7 +207,7 @@ function validateSignature(secret: string | undefined, payload: string, header: 
     return true
   }
 
-  const composed = computeHmac(secret, `${parsed.id ?? ""}${parsed.ts ?? ""}${payload}`)
+  const composed = computeHmac(secret, `${parsed.id ?? ""}${parsed.ts ?? ""}${normalizedPayload}`)
   const isValid = candidateHash === composed
 
   if (!isValid) {
