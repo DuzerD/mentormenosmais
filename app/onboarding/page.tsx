@@ -285,10 +285,12 @@ function MissionZeroChat() {
     if (!started || stepIndex < 0 || stepIndex >= totalQuestions) return null
     return QUESTIONS[stepIndex]
   }, [started, stepIndex, totalQuestions])
+  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "pending" | "success" | "error">("idle")
+  const [analysisError, setAnalysisError] = useState("")
   const { questionStatuses, answeredCount } = useMemo(() => {
     const statuses = QUESTIONS.map((question) => {
       if (question.type === "file") {
-        return Boolean(upload.file || upload.skipped)
+        return Boolean(upload.file || upload.skipped || answers[question.id])
       }
       if (question.type === "contact") {
         try {
@@ -406,6 +408,8 @@ function MissionZeroChat() {
     setIsLocked(false)
     setIsRecording(false)
     setContactForm({ name: "", email: "", phone: "" })
+    setAnalysisStatus("idle")
+    setAnalysisError("")
   }
   const handleStart = () => {
     reset()
@@ -619,6 +623,7 @@ function MissionZeroChat() {
     if (!currentQuestion || currentQuestion.type !== "file" || isLocked) return
     setIsLocked(true)
     setUpload({ file: null, previewUrl: undefined, skipped: true })
+    setAnswer(currentQuestion.id, "")
     pushEntry({
       key: `${currentQuestion.id}-skip-${Date.now()}`,
       role: "user",
@@ -738,23 +743,109 @@ function MissionZeroChat() {
       if (raw) {
         try {
           const parsed = JSON.parse(raw) as { name?: string; email?: string; phone?: string }
-          setContactForm({
+          const next = {
             name: parsed.name ?? "",
             email: parsed.email ?? "",
             phone: parsed.phone ?? "",
-          })
+          }
+          if (
+            next.name !== contactForm.name ||
+            next.email !== contactForm.email ||
+            next.phone !== contactForm.phone
+          ) {
+            setContactForm(next)
+          }
         } catch {
-          setContactForm({ name: "", email: "", phone: "" })
+          if (contactForm.name || contactForm.email || contactForm.phone) {
+            setContactForm({ name: "", email: "", phone: "" })
+          }
         }
-      } else {
+      } else if (contactForm.name || contactForm.email || contactForm.phone) {
         setContactForm({ name: "", email: "", phone: "" })
       }
-    } else {
+    } else if (contactForm.name || contactForm.email || contactForm.phone) {
       setContactForm({ name: "", email: "", phone: "" })
     }
-  }, [currentQuestion, answers])
+  }, [currentQuestion, answers, contactForm])
 
-  const renderInputArea = () => {
+  useEffect(() => {
+    if (!flowCompleted || analysisStatus !== "idle") return
+
+    const sendAnalysis = async () => {
+      try {
+        setAnalysisStatus("pending")
+        const orderedAnswers = QUESTIONS.map((question) => {
+          const stored = answers[question.id]
+          if (typeof stored === "string" && stored.length > 0) {
+            return stored
+          }
+          if (question.type === "contact") {
+            const payload = {
+              name: contactForm.name.trim(),
+              email: contactForm.email.trim(),
+              phone: contactForm.phone.trim(),
+            }
+            return JSON.stringify(payload)
+          }
+          if (question.type === "file" && upload.file) {
+            return JSON.stringify({
+              name: upload.file.name,
+              type: upload.file.type,
+              previewUrl: upload.previewUrl ?? null,
+            })
+          }
+          return ""
+        })
+
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answers: orderedAnswers }),
+        })
+
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}))
+          const message = errorPayload?.error || errorPayload?.message || `Erro ${response.status}`
+          throw new Error(message)
+        }
+
+        let data: any = {}
+        try {
+          data = await response.json()
+        } catch (parseError) {
+          console.warn("Resposta de análise sem JSON válido:", parseError)
+        }
+        setAnalysisStatus("success")
+        setAnalysisError("")
+
+        if (data?.idUnico) {
+          const cachePayload: any = {
+            idUnico: data.idUnico,
+            companyName: orderedAnswers[0]?.trim() || "Sua Marca",
+            diagnostico:
+              typeof data.parsedAnalysis === "object"
+                ? JSON.stringify(data.parsedAnalysis)
+                : data.analysis ?? "",
+            answers: orderedAnswers,
+          }
+          if (orderedAnswers[orderedAnswers.length - 1]) {
+            cachePayload.contact = orderedAnswers[orderedAnswers.length - 1]
+          }
+          BrandplotCache.set(cachePayload)
+        }
+      } catch (error) {
+        console.error("Erro ao enviar diagnóstico:", error)
+        setAnalysisStatus("error")
+        setAnalysisError(
+          error instanceof Error
+            ? error.message
+            : "Não foi possível salvar o diagnóstico agora. Tente novamente mais tarde.",
+        )
+      }
+    }
+
+    void sendAnalysis()
+  }, [flowCompleted, analysisStatus, answers, contactForm, upload])  const renderInputArea = () => {
     if (flowCompleted) {
       return (
         <div className="rounded-2xl border border-slate-200 bg-white/80 px-6 py-5 text-center text-sm text-slate-500">
@@ -1017,6 +1108,16 @@ function MissionZeroChat() {
               started={started}
               flowCompleted={flowCompleted}
             />
+            {flowCompleted && analysisStatus === "pending" ? (
+              <div className="rounded-2xl border border-sky-100 bg-sky-50/80 px-4 py-3 text-sm text-sky-700">
+                Salvando seu diagnóstico...
+              </div>
+            ) : null}
+            {flowCompleted && analysisStatus === "error" ? (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {analysisError || "Não foi possível salvar o diagnóstico agora. Tente novamente mais tarde."}
+              </div>
+            ) : null}
             {renderInputArea()}
           </div>
         </div>
