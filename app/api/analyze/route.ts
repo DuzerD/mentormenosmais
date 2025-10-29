@@ -406,6 +406,10 @@ RESPOSTAS:
           console.log("Processando contato:", answers[9])
           try {
             const contact = JSON.parse(answers[9])
+            if (contact.name) {
+              insertData.nome_cliente = contact.name
+              console.log("Nome adicionado:", contact.name)
+            }
             if (contact.email) {
               insertData.email = contact.email
               console.log("Email adicionado:", contact.email)

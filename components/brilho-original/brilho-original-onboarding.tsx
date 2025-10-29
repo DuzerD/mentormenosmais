@@ -24,7 +24,7 @@ const questions = [
   "Como você gostaria que sua marca fosse percebida?",
   'Em uma frase: "Minha marca existe para que as pessoas possam finalmente __________."',
   "Envie um print da página inicial do Instagram da sua marca (com bio, feed e destaques visíveis) para que possamos criar uma nova bio ao final do diagnóstico.",
-  "Informe um celular para contato (WhatsApp) ou um e-mail. Pelo menos um dos dois é obrigatório.",
+  "Compartilhe seus dados para continuarmos: nome do responsável, e-mail e WhatsApp.",
 ]
 
 function ElegantShape({
@@ -185,29 +185,39 @@ function QuestionStep({
   const [recordingTime, setRecordingTime] = useState(0)
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Para o passo de contato, separar resposta em dois campos
-  const [contact, setContact] = useState<{ phone: string; email: string }>(() => {
+  // Passo de contato: capturar nome, e-mail e telefone
+  const [contact, setContact] = useState<{ name: string; phone: string; email: string }>(() => {
     if (isContactStep && answer) {
       try {
-        return JSON.parse(answer)
+        const parsed = JSON.parse(answer)
+        return {
+          name: parsed.name ?? '',
+          phone: parsed.phone ?? '',
+          email: parsed.email ?? '',
+        }
       } catch {
-        return { phone: '', email: '' }
+        return { name: '', phone: '', email: '' }
       }
     }
-    return { phone: '', email: '' }
+    return { name: '', phone: '', email: '' }
   })
 
-  // Validação simples de e-mail e celular
+  // Validação simples dos campos de contato
+  function isValidName(name: string) {
+    return name.trim().length >= 3
+  }
   function isValidEmail(email: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
   function isValidPhone(phone: string) {
     return /^(\+?\d{10,15})$/.test(phone.replace(/\D/g, ''))
   }
-  // Agora o celular é obrigatório, e-mail é opcional
-  const isContactValid = isContactStep ? (
-    contact.phone && isValidPhone(contact.phone)
-  ) : true
+  const nameHasValue = Boolean(contact.name.trim())
+  const emailHasValue = Boolean(contact.email.trim())
+  const phoneHasValue = Boolean(contact.phone.trim())
+  const isContactValid = isContactStep
+    ? isValidName(contact.name) && isValidEmail(contact.email) && isValidPhone(contact.phone)
+    : true
 
   // Atualiza o answer do step pai
   useEffect(() => {
@@ -453,31 +463,63 @@ function QuestionStep({
                 )}
               </div>
             ) : isContactStep ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
+                  <label htmlFor="contact-name" className="block text-sm text-white/60 mb-2">
+                    Nome completo do responsável
+                  </label>
                   <input
-                    type="tel"
-                    value={contact.phone}
-                    onChange={(e) => setContact(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="(11) 99999-9999 (obrigatório)"
-                    className="w-full px-6 py-4 bg-white/[0.05] border border-white/[0.1] rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                    id="contact-name"
+                    type="text"
+                    value={contact.name}
+                    onChange={(e) => setContact(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Quem está preenchendo o diagnóstico"
+                    className="w-full px-6 py-4 bg-white/[0.05] border border-white/[0.1] rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duração-300 backdrop-blur-sm"
                     required
                   />
-                </div>
-                <div className="text-center">
-                  <span className="text-white/40 text-sm">ou</span>
+                  {!isValidName(contact.name) && nameHasValue && (
+                    <p className="mt-2 text-xs text-red-300">Informe pelo menos 3 caracteres para seguirmos.</p>
+                  )}
                 </div>
                 <div>
+                  <label htmlFor="contact-email" className="block text-sm text-white/60 mb-2">
+                    E-mail profissional
+                  </label>
                   <input
+                    id="contact-email"
                     type="email"
                     value={contact.email}
                     onChange={(e) => setContact(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="seu@email.com (opcional)"
-                    className="w-full px-6 py-4 bg-white/[0.05] border border-white/[0.1] rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                    placeholder="seu@email.com"
+                    className="w-full px-6 py-4 bg-white/[0.05] border border-white/[0.1] rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duração-300 backdrop-blur-sm"
+                    required
                   />
+                  {!isValidEmail(contact.email) && emailHasValue && (
+                    <p className="mt-2 text-xs text-red-300">Informe um e-mail válido para receber o diagnóstico.</p>
+                  )}
                 </div>
+                <div>
+                  <label htmlFor="contact-phone" className="block text-sm text-white/60 mb-2">
+                    WhatsApp para contato
+                  </label>
+                  <input
+                    id="contact-phone"
+                    type="tel"
+                    value={contact.phone}
+                    onChange={(e) => setContact(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(11) 99999-9999"
+                    className="w-full px-6 py-4 bg-white/[0.05] border border-white/[0.1] rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duração-300 backdrop-blur-sm"
+                    required
+                  />
+                  {!isValidPhone(contact.phone) && phoneHasValue && (
+                    <p className="mt-2 text-xs text-red-300">Inclua DDD e somente números (aceitamos +55 se preferir).</p>
+                  )}
+                </div>
+                <p className="text-xs text-white/40">
+                  Usamos esses dados apenas para enviar seu diagnóstico e liberar as missões após o pagamento.
+                </p>
               </div>
-            ) : (
+) : (
               <div className="relative">
                 <textarea
                   value={answer}

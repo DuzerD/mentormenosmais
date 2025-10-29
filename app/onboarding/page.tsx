@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import type { ReactNode } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -20,13 +20,14 @@ type MissionQuestion = {
     | "desiredPerception"
     | "quarterGoals"
     | "instagramRef"
+    | "contactInfo"
   stage: string
   title: string
   question: string
   placeholder: string
   mentorFeedback: string
   microFeedback?: string
-  type: "text" | "file"
+  type: "text" | "file" | "contact"
 }
 const QUESTIONS: MissionQuestion[] = [
   {
@@ -112,7 +113,16 @@ const QUESTIONS: MissionQuestion[] = [
     mentorFeedback: "Maravilha — isso vai ajudar nosso Designer e Copywriter.",
     type: "file",
   },
-]
+  {
+    id: "contactInfo",
+    stage: "Direção",
+    title: "Etapa 3 · Direção",
+    question: "Compartilhe seus dados para continuarmos.",
+    placeholder: "",
+    mentorFeedback: "Perfeito — assim conseguimos avisar quando as missões forem liberadas.",
+    type: "contact",
+  },
+] 
 type ChatRole = "mentor" | "user" | "system"
 type ChatTone = "intro" | "question" | "answer" | "feedback" | "summary" | "report" | "cta" | "progress"
 type ChatEntry = {
@@ -265,6 +275,7 @@ function MissionZeroChat() {
   const [isLocked, setIsLocked] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [speechAvailable, setSpeechAvailable] = useState(false)
+  const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "" })
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<RecognitionInstance | null>(null)
@@ -279,6 +290,14 @@ function MissionZeroChat() {
       if (question.type === "file") {
         return Boolean(upload.file || upload.skipped)
       }
+      if (question.type === "contact") {
+        try {
+          const parsed = JSON.parse(answers[question.id] ?? "{}") as { name?: string; email?: string; phone?: string }
+          return Boolean(parsed?.name?.trim() && parsed?.email?.trim() && parsed?.phone?.trim())
+        } catch {
+          return false
+        }
+      }
       return Boolean(answers[question.id]?.trim())
     })
     return {
@@ -286,6 +305,9 @@ function MissionZeroChat() {
       answeredCount: statuses.filter(Boolean).length,
     }
   }, [answers, upload])
+  const isValidName = (value: string) => value.trim().length >= 3
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  const isValidPhone = (value: string) => /^(\+?\d{10,15})$/.test(value.replace(/\D/g, ""))
   const progressValue = flowCompleted ? 100 : Math.round((answeredCount / totalQuestions) * 100)
   const registerTimeout = (callback: () => void, delay: number) => {
     const id = window.setTimeout(() => {
@@ -383,6 +405,7 @@ function MissionZeroChat() {
     setCurrentInput("")
     setIsLocked(false)
     setIsRecording(false)
+    setContactForm({ name: "", email: "", phone: "" })
   }
   const handleStart = () => {
     reset()
@@ -539,6 +562,59 @@ function MissionZeroChat() {
     })
     registerTimeout(handleAdvance, progressDelay + 650)
   }
+  const handleContactSubmit = () => {
+    if (!currentQuestion || currentQuestion.type !== "contact" || isLocked) return
+    if (!isValidName(contactForm.name) || !isValidEmail(contactForm.email) || !isValidPhone(contactForm.phone)) {
+      return
+    }
+    const sanitized = {
+      name: contactForm.name.trim(),
+      email: contactForm.email.trim(),
+      phone: contactForm.phone.trim(),
+    }
+    setIsLocked(true)
+    const serialized = JSON.stringify(sanitized)
+    if (answers[currentQuestion.id] !== serialized) {
+      setAnswer(currentQuestion.id, serialized)
+    }
+    pushEntry({
+      key: `${currentQuestion.id}-contact-${Date.now()}`,
+      role: "user",
+      tone: "answer",
+      questionId: currentQuestion.id,
+      content: (
+        <div className="space-y-1 text-white">
+          <p className="text-base font-semibold">{sanitized.name}</p>
+          <p className="text-sm opacity-90">{sanitized.email}</p>
+          <p className="text-sm opacity-90">{sanitized.phone}</p>
+        </div>
+      ),
+    })
+    registerTimeout(
+      () =>
+        pushEntry({
+          key: `${currentQuestion.id}-feedback-${Date.now()}`,
+          role: "mentor",
+          tone: "feedback",
+          questionId: currentQuestion.id,
+          content: <p className="text-base text-slate-700">{currentQuestion.mentorFeedback}</p>,
+        }),
+      520,
+    )
+    const questionIndex = stepIndex
+    const previousStatuses = questionStatuses.slice()
+    const nextStatuses = questionStatuses.map((status, index) =>
+      index === questionIndex ? true : status
+    )
+    const progressDelay = 950
+    queueProgressMessage({
+      question: currentQuestion,
+      previousStatuses,
+      nextStatuses,
+      delay: progressDelay,
+    })
+    registerTimeout(handleAdvance, progressDelay + 650)
+  }
   const handleSkipUpload = () => {
     if (!currentQuestion || currentQuestion.type !== "file" || isLocked) return
     setIsLocked(true)
@@ -655,6 +731,29 @@ function MissionZeroChat() {
   useEffect(() => {
     scrollToBottom(true)
   }, [])
+
+  useEffect(() => {
+    if (currentQuestion?.type === "contact") {
+      const raw = answers[currentQuestion.id]
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as { name?: string; email?: string; phone?: string }
+          setContactForm({
+            name: parsed.name ?? "",
+            email: parsed.email ?? "",
+            phone: parsed.phone ?? "",
+          })
+        } catch {
+          setContactForm({ name: "", email: "", phone: "" })
+        }
+      } else {
+        setContactForm({ name: "", email: "", phone: "" })
+      }
+    } else {
+      setContactForm({ name: "", email: "", phone: "" })
+    }
+  }, [currentQuestion, answers])
+
   const renderInputArea = () => {
     if (flowCompleted) {
       return (
@@ -728,6 +827,99 @@ function MissionZeroChat() {
               disabled={isLocked || !upload.file}
             >
               Enviar para o Mentor
+            </Button>
+          </div>
+        </div>
+      )
+    }
+    if (currentQuestion.type === "contact") {
+      const nameInvalid = !isValidName(contactForm.name) && contactForm.name.trim().length > 0
+      const emailInvalid = !isValidEmail(contactForm.email) && contactForm.email.trim().length > 0
+      const phoneInvalid = !isValidPhone(contactForm.phone) && contactForm.phone.trim().length > 0
+      const canSubmit = isValidName(contactForm.name) && isValidEmail(contactForm.email) && isValidPhone(contactForm.phone)
+
+      return (
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-6">
+          <div className="space-y-3">
+            <div>
+              <label htmlFor="contact-name" className="block text-sm text-slate-600">
+                Nome completo
+              </label>
+              <input
+                id="contact-name"
+                type="text"
+                value={contactForm.name}
+                onChange={(event) =>
+                  setContactForm((prev) => {
+                    const next = { ...prev, name: event.target.value }
+                    if (currentQuestion?.type === "contact") {
+                      setAnswer(currentQuestion.id, JSON.stringify(next))
+                    }
+                    return next
+                  })
+                }
+                placeholder="Quem está preenchendo o diagnóstico"
+                className="w-full rounded-2xl border border-sky-100 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-200"
+              />
+              {nameInvalid && <p className="mt-2 text-xs text-rose-500">Informe pelo menos 3 caracteres.</p>}
+            </div>
+            <div>
+              <label htmlFor="contact-email" className="block text-sm text-slate-600">
+                E-mail profissional
+              </label>
+              <input
+                id="contact-email"
+                type="email"
+                value={contactForm.email}
+                onChange={(event) =>
+                  setContactForm((prev) => {
+                    const next = { ...prev, email: event.target.value }
+                    if (currentQuestion?.type === "contact") {
+                      setAnswer(currentQuestion.id, JSON.stringify(next))
+                    }
+                    return next
+                  })
+                }
+                placeholder="seu@email.com"
+                className="w-full rounded-2xl border border-sky-100 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-200"
+              />
+              {emailInvalid && <p className="mt-2 text-xs text-rose-500">Informe um e-mail válido.</p>}
+            </div>
+            <div>
+              <label htmlFor="contact-phone" className="block text-sm text-slate-600">
+                WhatsApp (com DDD)
+              </label>
+              <input
+                id="contact-phone"
+                type="tel"
+                value={contactForm.phone}
+                onChange={(event) =>
+                  setContactForm((prev) => {
+                    const next = { ...prev, phone: event.target.value }
+                    if (currentQuestion?.type === "contact") {
+                      setAnswer(currentQuestion.id, JSON.stringify(next))
+                    }
+                    return next
+                  })
+                }
+                placeholder="(11) 99999-9999"
+                className="w-full rounded-2xl border border-sky-100 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-200"
+              />
+              {phoneInvalid && (
+                <p className="mt-2 text-xs text-rose-500">Inclua DDD e somente números (aceita +55 na frente).</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+            <span>Usaremos essas informações apenas para enviar o diagnóstico e liberar as missões.</span>
+            <Button
+              type="button"
+              className="bg-[#A980FF] px-6 py-2 text-base font-semibold text-white shadow-md hover:bg-[#9570ff]"
+              onClick={handleContactSubmit}
+              disabled={isLocked || !canSubmit}
+            >
+              Confirmar dados
             </Button>
           </div>
         </div>

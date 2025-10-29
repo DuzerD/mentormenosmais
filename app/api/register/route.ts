@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     if ((!updateData.email || !updateData.telefone) && cachedData?.answers) {
       try {
         const contact = JSON.parse(cachedData.answers[9] || "{}")
+        if (!updateData.nome_cliente) updateData.nome_cliente = contact.name || null
         if (!updateData.email) updateData.email = contact.email || null
         if (!updateData.telefone) updateData.telefone = contact.phone || null
       } catch {

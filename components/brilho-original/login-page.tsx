@@ -135,6 +135,7 @@ export default function LoginPage() {
             setFormData(prev => ({
               ...prev,
               companyName: cached.companyName || prev.companyName,
+              name: contactInfo.name || prev.name,
               email: contactInfo.email || prev.email,
               phone: contactInfo.phone || prev.phone,
             }))

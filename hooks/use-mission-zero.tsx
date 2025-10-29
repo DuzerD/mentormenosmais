@@ -12,6 +12,7 @@ type MissionZeroField =
   | "desiredPerception"
   | "quarterGoals"
   | "instagramRef"
+  | "contactInfo"
 
 type MissionZeroAnswers = Partial<Record<MissionZeroField, string>>
 
@@ -65,4 +66,3 @@ export function useMissionZero() {
 
   return context
 }
-
