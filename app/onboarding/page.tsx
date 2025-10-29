@@ -1119,7 +1119,7 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
       }
 
       const json = (await response.json()) as { init_point?: string | null; sandbox_init_point?: string | null }
-      return json.init_point ?? json.sandbox_init_point ?? null
+      return json.sandbox_init_point ?? json.init_point ?? null
     } catch (error) {
       console.error("Erro ao abrir checkout do Mercado Pago:", error)
       return null

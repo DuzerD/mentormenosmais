@@ -542,7 +542,7 @@ function Mission2Experience() {
       }
 
       const json = (await response.json()) as { init_point?: string | null; sandbox_init_point?: string | null }
-      const checkoutUrl = json.init_point ?? json.sandbox_init_point
+      const checkoutUrl = json.sandbox_init_point ?? json.init_point
 
       if (!checkoutUrl) {
         throw new Error("Não recebi o link do checkout")
