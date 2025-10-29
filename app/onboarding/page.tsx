@@ -845,7 +845,9 @@ function MissionZeroChat() {
     }
 
     void sendAnalysis()
-  }, [flowCompleted, analysisStatus, answers, contactForm, upload])  const renderInputArea = () => {
+    }, [flowCompleted, analysisStatus, answers, contactForm, upload])
+
+    const renderInputArea = () => {
     if (flowCompleted) {
       return (
         <div className="rounded-2xl border border-slate-200 bg-white/80 px-6 py-5 text-center text-sm text-slate-500">
