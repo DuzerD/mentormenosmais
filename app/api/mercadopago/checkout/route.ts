@@ -181,6 +181,12 @@ export async function POST(request: Request) {
       },
     })
 
+    console.log("MercadoPago checkout preference:", {
+      id: preference.id,
+      init_point: preference.init_point,
+      sandbox_init_point: preference.sandbox_init_point,
+    })
+
     await persistPendingCheckout(origin, idUnico, body.planId, product, unlocks, preference.id)
 
     return NextResponse.json(
