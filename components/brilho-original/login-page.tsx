@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Pacifico } from "next/font/google"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { BrandplotCache } from "@/lib/brandplot-cache"
@@ -12,10 +11,8 @@ import { useState, useEffect } from "react"
 import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-const pacifico = Pacifico({
   subsets: ["latin"],
   weight: ["400"],
-  variable: "--font-pacifico",
 })
 
 function ElegantShape({
@@ -316,7 +313,7 @@ export default function LoginPage() {
             </h1>
 
             <p className="mt-3 text-sm text-slate-600">
-              {isLogin ? "Entre na sua conta para continuar" : "Junte-se à nossa comunidade de marcas"}
+              {isLogin ? "Entre para continuar sua jornada com os agentes Mentoor." : "Desbloqueie as miss�es e organize a marca com a nossa IA."}
             </p>
           </motion.div>
 
@@ -337,7 +334,7 @@ export default function LoginPage() {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <label htmlFor="name" className="block text-sm font-medium text-white/80 mb-2">
+                    <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
                       Nome completo
                     </label>
                     <input
@@ -352,7 +349,7 @@ export default function LoginPage() {
                     />
 
                     <div className="mt-4">
-                      <label htmlFor="companyName" className="block text-sm font-medium text-white/80 mb-2">
+                      <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-2">
                         Nome da empresa
                       </label>
                       <input
@@ -368,7 +365,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mt-4">
-                      <label htmlFor="phone" className="block text-sm font-medium text-white/80 mb-2">
+                      <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">
                         Telefone de contato
                       </label>
                       <input
@@ -387,7 +384,7 @@ export default function LoginPage() {
               </AnimatePresence>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                   E-mail
                 </label>
                 <input
@@ -403,7 +400,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
                   Senha
                 </label>
                 <div className="relative">
@@ -420,7 +417,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -435,7 +432,7 @@ export default function LoginPage() {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/80 mb-2">
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">
                       Confirmar senha
                     </label>
                     <div className="relative">
@@ -452,7 +449,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors"
                       >
                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -462,7 +459,7 @@ export default function LoginPage() {
               </AnimatePresence>
               {isLogin && (
                 <div className="flex justify-end">
-                  <Link href="/forgot-password" className="text-sm text-[#c8b79e] hover:text-[#d0c0a8] transition-colors">
+                  <Link href="/forgot-password" className="text-sm text-sky-600 hover:text-sky-500 transition-colors">
                     Esqueci minha senha
                   </Link>
                 </div>
@@ -486,15 +483,15 @@ export default function LoginPage() {
                 <span className="relative z-10">
                   {isLoading ? "Carregando..." : (isLogin ? "Entrar" : "Criar conta")}
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+                <div className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-500 group-hover:translate-y-0" />
               </button>
             </form>
 
             {/* <div className="mt-6 text-center">
-              <span className="text-white/60 text-sm">{isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}</span>
+              <span className="text-slate-500 text-sm">{isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}</span>
               <button
                 onClick={toggleMode}
-                className="ml-2 text-[#c8b79e] hover:text-[#d0c0a8] transition-colors text-sm font-medium"
+                className="ml-2 text-sky-600 hover:text-sky-500 transition-colors text-sm font-medium"
               >
                 {isLogin ? "Cadastre-se" : "Faça login"}
               </button>
@@ -511,7 +508,7 @@ export default function LoginPage() {
           >
             <button
               onClick={() => router.push('/')}
-              className="inline-flex items-center gap-2 text-white/60 hover:text-white/80 transition-colors text-sm"
+              className="inline-flex items-center gap-2 text-slate-500 transition-colors hover:text-slate-700 text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Voltar ao início
