@@ -313,7 +313,7 @@ export default function LoginPage() {
             </h1>
 
             <p className="mt-3 text-sm text-slate-600">
-              {isLogin ? "Entre para continuar sua jornada com os agentes Mentoor." : "Desbloqueie as missıes e organize a marca com a nossa IA."}
+              {isLogin ? "Entre para continuar sua jornada com os agentes Mentoor." : "Desbloqueie as miss√µes e organize a marca com a nossa IA."}
             </p>
           </motion.div>
 
