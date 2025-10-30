@@ -1,28 +1,28 @@
 const testimonials = [
   {
     name: "Ana Silva",
-    role: "Criadora de conteúdo",
-    company: "Mentoria digital",
+    role: "CMO & cofundadora",
+    company: "SaaS de logística",
     content:
-      "O Mentoor me ajudou a entender exatamente o que faltava na minha comunicação. Em 30 dias dobrei meu engajamento e comecei a receber propostas melhores.",
+      "Em uma semana conseguimos alinhar a proposta do produto e atualizar todas as peças comerciais. O time agora fala a mesma língua e os fechamentos ficaram mais rápidos.",
     rating: 5,
     avatar: "/professional-woman-avatar.jpg",
   },
   {
     name: "Carlos Mendes",
-    role: "Empresário em ascensão",
-    company: "Consultoria digital",
+    role: "CEO",
+    company: "Consultoria de crescimento",
     content:
-      "Finalmente consegui estruturar minha presença online. O diagnóstico foi preciso e o plano de ação me deu clareza total sobre os próximos passos.",
+      "O diagnóstico traduziu o valor da nossa solução em mensagens simples. Hoje os leads chegam entendendo o que fazemos e as reuniões são muito mais objetivas.",
     rating: 5,
     avatar: "/professional-man-avatar.jpg",
   },
   {
     name: "Juliana Costa",
-    role: "Social media & marketing",
-    company: "Agência própria",
+    role: "Head de Marketing",
+    company: "Edtech B2B",
     content:
-      "Método validado e direto ao ponto. Hoje tenho um sistema de conteúdo funcionando no piloto automático e clientes satisfeitos com os resultados.",
+      "Ganhei clareza sobre a jornada e recebi playbooks prontos. Economizamos horas produzindo conteúdo e elevamos a consistência da marca em todos os canais.",
     rating: 5,
     avatar: "/professional-woman-avatar-smiling.jpg",
   },
@@ -30,29 +30,32 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section id="depoimentos" className="bg-white py-24">
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <h2 className="text-balance text-4xl font-bold md:text-5xl">
-            Profissionais que simplificaram com o método e voltaram a viver de verdade
+    <section className="bg-slate-900/10 py-24 text-slate-900">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Histórias reais
+          </span>
+          <h2 className="mt-6 text-balance text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
+            Profissionais que destravaram clareza, tempo e receita com o Mentoor.
           </h2>
         </div>
 
-        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
+        <div className="mt-16 grid gap-6 md:grid-cols-3">
           {testimonials.map((testimonial) => (
             <article
               key={testimonial.name}
-              className="rounded-2xl border border-gray-200 bg-gray-50 p-8 transition-colors hover:border-primary/50"
+              className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-7 text-slate-600 shadow-[0_20px_45px_rgba(15,23,42,0.1)] transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="mb-4 flex gap-1">
+              <div className="mb-5 flex gap-1 text-sky-500">
                 {Array.from({ length: testimonial.rating }).map((_, index) => (
-                  <span key={index} className="material-symbols-outlined text-xl text-primary">
+                  <span key={index} className="material-symbols-outlined text-xl">
                     star
                   </span>
                 ))}
               </div>
-              <p className="mb-6 text-gray-700">"{testimonial.content}"</p>
-              <div className="flex items-center gap-4">
+              <p className="flex-1 text-sm leading-relaxed text-slate-700">"{testimonial.content}"</p>
+              <div className="mt-6 flex items-center gap-4">
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.name}
@@ -60,9 +63,9 @@ export function TestimonialsSection() {
                   loading="lazy"
                 />
                 <div>
-                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {testimonial.role} · {testimonial.company}
+                  <p className="text-sm font-semibold text-slate-900">{testimonial.name}</p>
+                  <p className="text-xs text-slate-500">
+                    {testimonial.role} • {testimonial.company}
                   </p>
                 </div>
               </div>

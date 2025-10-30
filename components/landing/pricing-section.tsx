@@ -3,11 +3,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 type Plan = {
-  emoji: string
   name: string
   subtitle: string
   price: string
-  period: string
+  period?: string
   description: string
   features: string[]
   cta: string
@@ -16,117 +15,108 @@ type Plan = {
 
 const plans: Plan[] = [
   {
-    emoji: "🧭",
-    name: "Diagnóstico gratuito",
-    subtitle: "O primeiro passo para clarear sua mensagem",
+    name: "Diagnóstico Mentoor",
+    subtitle: "Ponto de partida",
     price: "Gratuito",
-    period: "",
     description:
-      "Entenda por que sua marca ainda não comunica o valor que entrega e descubra onde está o gargalo que trava o seu crescimento.",
+      "Conclua a Missão Zero, identifique gargalos e receba um panorama claro para organizar sua marca antes de liberar as missões.",
     features: [
-      "Análise automática com IA",
-      "Relatório personalizado de clareza de marca",
-      "Indicação do próximo passo ideal",
-      "100% gratuito",
+      "Radiografia de mensagem, visual e consistência estratégica",
+      "Mapa inicial de posicionamento e tom de voz sugerido",
+      "Trilhas recomendadas para os próximos passos",
+      "Sugestões de conteúdos imediatos para ativar a marca",
     ],
-    cta: "Fazer meu diagnóstico",
+    cta: "Começar agora",
   },
   {
-    emoji: "🚀",
-    name: "Mentoor IA",
-    subtitle: "Plano para fazer menos e faturar mais",
-    price: "R$ 250",
-    period: "/mês",
+    name: "Jornada Completa Mentoor",
+    subtitle: "Missões 0 a 5 liberadas",
+    price: "R$ 297",
     description:
-      "Tenha um acompanhamento inteligente que organiza seu posicionamento, simplifica suas ofertas e te ajuda a vender com leveza.",
+      "Para quem quer todo o time IA acompanhando a execução. Liberamos todas as missões para construir estratégia, ativos e operação completa.",
     features: [
-      "Diagnóstico e posicionamento com IA",
-      "Plano de ação guiado e revisões mensais",
-      "Comunidade e suporte direto",
-      "Ideias de conteúdo e vendas automatizadas",
-      "Resultados mensuráveis em até 90 dias",
+      "Mensagem, identidade e operação comercial alinhadas em um só lugar",
+      "Ativos prontos: scripts, kits visuais e calendário tático para lançar rápido",
+      "Agentes IA acompanhando posicionamento, design, conteúdo e métricas",
+      "Checkpoints semanais para garantir implementação sem travar",
+      "Economia frente ao desbloqueio individual das missões",
     ],
-    cta: "Quero entrar no Mentoor IA",
+    cta: "Liberar Jornada Completa",
     popular: true,
   },
   {
-    emoji: "🎯",
-    name: "MenosMais Studio",
-    subtitle: "Pra quem quer o resultado pronto, sem executar",
-    price: "Sob medida",
-    period: "",
+    name: "Missão 1 - Estratégia da Marca",
+    subtitle: "Comece pela base",
+    price: "R$ 97",
     description:
-      "Projeto feito do zero pela equipe MenosMais Studio — estratégia, identidade e posicionamento prontos para colocar sua marca no próximo nível.",
+      "Perfeito para validar o método com foco total na estratégia. Você constrói a base da marca com o Estrategista Mentoor.",
     features: [
-      "Planejamento e posicionamento completo",
-      "Design e comunicação alinhados à estratégia",
-      "Execução feita pela equipe MenosMais",
-      "Acompanhamento de performance",
-      "Resultados premium sob medida",
+      "Framework completo da Missão 1 — Estratégia",
+      "Proposta de valor e público ideal traduzidos com clareza",
+      "Headline, pitch e pilares de mensagem aprovados pelo Estrategista",
+      "Plano prático de 30 dias para experimentar e validar a narrativa",
     ],
-    cta: "Solicitar proposta",
+    cta: "Liberar Missão 1",
   },
 ]
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="bg-zinc-950 py-24 text-white">
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <h2 className="text-balance text-4xl font-bold text-white md:text-5xl">
-            Escolha o passo certo para simplificar o seu negócio
+    <section id="planos" className="bg-white py-24">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
+            Formas de trabalhar com a gente
+          </span>
+          <h2 className="mt-6 text-balance text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
+            Escolha o nível de apoio ideal para o seu momento.
           </h2>
-          <p className="mx-auto mt-6 max-w-3xl text-xl text-gray-400">
-            Três formas de sair do modo “fazer tudo sozinho” e começar a crescer com clareza, estratégia e tempo de
-            sobra.
+          <p className="mt-4 text-lg leading-relaxed text-slate-600">
+            Comece com o diagnóstico gratuito para entender a sua situação. A partir daí, evolua com a IA do Mentoor ou
+            traga o nosso time para executar ao seu lado.
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
+        <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {plans.map((plan) => (
             <article
               key={plan.name}
-              className={`rounded-3xl p-8 transition-transform ${
-                plan.popular ? "scale-105 bg-gradient-to-br from-primary to-blue-600" : "border border-zinc-800 bg-zinc-900"
+              className={`flex h-full flex-col rounded-3xl border p-8 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-transform duration-300 hover:-translate-y-1 ${
+                plan.popular
+                  ? "border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-blue-50"
+                  : "border-slate-200 bg-white"
               }`}
             >
               {plan.popular && (
-                <span className="mb-4 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
-                  RECOMENDADO
+                <span className="mb-4 inline-flex items-center rounded-full bg-indigo-600/10 px-3 py-1 text-xs font-semibold text-indigo-600">
+                  Recomendado
                 </span>
               )}
-
-              <div className="mb-4 text-4xl">{plan.emoji}</div>
-              <h3 className="text-2xl font-bold">{plan.name}</h3>
-              <p className={`mt-3 text-sm font-medium ${plan.popular ? "text-white/90" : "text-gray-300"}`}>
-                {plan.subtitle}
-              </p>
-              <p className={`mt-4 text-sm ${plan.popular ? "text-white/80" : "text-gray-400"}`}>{plan.description}</p>
-
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-5xl font-bold">{plan.price}</span>
-                {plan.period && <span className={`text-lg ${plan.popular ? "text-white/80" : "text-gray-400"}`}>{plan.period}</span>}
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900">{plan.name}</h3>
+                <p className="mt-1 text-sm font-medium uppercase tracking-[0.25em] text-slate-500">{plan.subtitle}</p>
+                <p className="mt-4 text-sm leading-relaxed text-slate-600">{plan.description}</p>
+                <div className="mt-6 flex items-baseline gap-1 text-slate-900">
+                  <span className="text-4xl font-semibold">{plan.price}</span>
+                  {plan.period && <span className="text-sm text-slate-500">{plan.period}</span>}
+                </div>
               </div>
 
               <Button
                 size="lg"
                 asChild
-                className={`mt-6 w-full ${
-                  plan.popular ? "bg-white text-primary hover:bg-gray-100" : "bg-primary text-white hover:bg-primary/90"
+                className={`mt-8 h-11 rounded-full text-sm font-semibold ${
+                  plan.popular ? "bg-slate-900 text-white hover:bg-slate-900/90" : "bg-indigo-600 text-white hover:bg-indigo-500"
                 }`}
               >
                 <Link href="/onboarding">{plan.cta}</Link>
               </Button>
 
-              <ul className="mt-8 space-y-4">
+              <ul className="mt-8 space-y-3 text-sm text-slate-600">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <span
-                      className={`material-symbols-outlined text-xl ${plan.popular ? "text-white" : "text-primary"}`}
-                    >
-                      check_circle
-                    </span>
-                    <span className={plan.popular ? "text-sm text-white/90" : "text-sm text-gray-300"}>{feature}</span>
+                    <span className="material-symbols-outlined mt-0.5 text-base text-indigo-500">check_circle</span>
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -137,5 +127,3 @@ export function PricingSection() {
     </section>
   )
 }
-
-
