@@ -3,29 +3,53 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="border-t border-zinc-800 bg-zinc-950 py-16 text-white">
-      <div className="container mx-auto px-4">
-        <div className="mb-12 max-w-md">
-          <Link href="/" className="mb-4 flex items-center gap-2">
-            <Image src="/logo-mentoor.svg" alt="Mentoor" width={120} height={32} className="h-8 w-auto brightness-0 invert" />
+    <footer className="border-t border-slate-200 bg-white py-12">
+      <div className="container mx-auto grid gap-10 px-4 text-sm text-slate-600 lg:grid-cols-[1fr_auto] lg:px-8">
+        <div className="space-y-4">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/images/mentoor-wordmark.svg" alt="Mentoor" width={140} height={32} className="h-7 w-auto" />
+            <span className="hidden text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 sm:inline">
+              Marca em ordem
+            </span>
           </Link>
-          <p className="text-sm leading-relaxed text-gray-400">
-            Descubra o que falta para a sua marca vender mais fazendo menos. Diagnóstico com IA, plano acionável e
-            suporte para colocar a estratégia em prática.
+          <p className="max-w-md text-sm leading-relaxed text-slate-600">
+            O Mentoor ajuda marcas modernas a comunicarem seu valor com clareza. Diagnóstico inteligente, plano de 90 dias
+            e materiais prontos para executar sem desperdício.
           </p>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-zinc-800 pt-8 text-sm text-gray-400 md:flex-row">
+        <div className="flex flex-col items-start gap-4 text-sm text-slate-600 sm:flex-row sm:items-center">
+          <Link
+            href="mailto:contato@mentoor.app"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 transition-colors hover:border-slate-400 hover:text-slate-900"
+          >
+            <span className="material-symbols-outlined text-base">mail</span>
+            contato@mentoor.app
+          </Link>
+          <Link
+            href="https://instagram.com/menosmaistd"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 transition-colors hover:border-slate-400 hover:text-slate-900"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="material-symbols-outlined text-base">photo_camera</span>
+            @menosmaistd
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-10 border-t border-slate-200">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-slate-500 sm:flex-row lg:px-8">
           <span>© {new Date().getFullYear()} Mentoor. Todos os direitos reservados.</span>
           <div className="flex items-center gap-4">
-            <Link
-              href="https://instagram.com/menosmaistd/"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 transition-colors hover:bg-primary"
-              aria-label="Instagram"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="material-symbols-outlined text-lg">photo_camera</span>
+            <Link href="#planos" className="transition-colors hover:text-slate-900">
+              Planos
+            </Link>
+            <Link href="#faq" className="transition-colors hover:text-slate-900">
+              FAQ
+            </Link>
+            <Link href="/login" className="transition-colors hover:text-slate-900">
+              Entrar
             </Link>
           </div>
         </div>

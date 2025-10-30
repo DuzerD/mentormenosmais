@@ -12,7 +12,7 @@ import { TestimonialsSection } from "@/components/landing/testimonials-section"
 
 export default function HomePage() {
   return (
-    <main className="landing-page min-h-screen bg-background text-foreground">
+    <main className="landing-page min-h-screen bg-slate-950 text-slate-900">
       <Header />
       <HeroSection />
       <ProblemSection />

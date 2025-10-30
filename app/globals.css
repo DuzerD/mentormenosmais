@@ -603,6 +603,14 @@
   color: #ffffff !important;
 }
 
+.brand-theme .login-heading {
+  color: #1f2937 !important;
+}
+
+.brand-theme .login-subtitle {
+  color: #475569 !important;
+}
+
 .brand-theme .bg-blue-500.text-white,
 .brand-theme .bg-indigo-500.text-white,
 .brand-theme .brand-button.text-white,

@@ -1,52 +1,77 @@
 const features = [
   {
-    icon: "layers",
-    title: "Clareza & direção",
+    title: "Hub de posicionamento",
     description:
-      "Descubra onde está o ruído da sua comunicação e o que precisa mudar para atrair clientes certos com leveza.",
+      "Um painel onde você enxerga a essência da marca em uma única página: promessa, diferenciais, personas e âncoras de comunicação.",
+    icon: "target",
   },
   {
-    icon: "chat_bubble",
-    title: "Mensagem & posicionamento",
+    title: "Biblioteca de mensagens",
     description:
-      "Transforme o que você já faz em uma mensagem que conecta e diferencia — sem precisar se explicar o tempo todo.",
+      "Headlines, argumentos e scripts adaptados para landing pages, propostas, redes sociais e funil comercial – tudo no tom da sua marca.",
+    icon: "library_books",
   },
   {
-    icon: "bolt",
-    title: "Sistema estratégico com IA",
-    description: "Monte um fluxo simples para gerar ideias, mensagens e propostas — sem depender de improviso.",
+    title: "Playbooks acionáveis",
+    description:
+      "Sequências prontas para campanhas, lançamentos e relacionamento. Cada playbook vem com metas, checkpoints e indicadores.",
+    icon: "auto_stories",
   },
   {
-    icon: "trending_up",
-    title: "Plano de ação validado",
-    description: "Saia com um plano leve e claro, pronto para aplicar e gerar resultado nas próximas semanas.",
+    title: "Acompanhamento de impacto",
+    description:
+      "Acesso ao Mentoor IA para ajustar mensagem, medir evolução e mover as prioridades conforme o negócio cresce.",
+    icon: "insights",
   },
 ]
 
 export function FeaturesSection() {
   return (
-    <section id="beneficios" className="bg-zinc-950 py-24 text-white">
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <span className="mb-6 inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-            O que você vai receber
+    <section id="resultados" className="bg-white py-24">
+      <div className="container mx-auto grid gap-12 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+        <div className="max-w-xl space-y-6">
+          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
+            O que você recebe
           </span>
-          <h2 className="text-balance text-4xl font-bold text-white md:text-5xl">
-            O método que transforma confusão em clareza
+          <h2 className="text-balance text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
+            Um sistema completo para manter a marca coerente e vender com tranquilidade.
           </h2>
+          <p className="text-lg leading-relaxed text-slate-600">
+            O Mentoor não entrega um PDF estático. Você recebe um hub vivo que organiza posicionamento, materiais prontos
+            e plano de execução. Tudo pensado para founders e times pequenos colocarem a estratégia em prática no dia a
+            dia.
+          </p>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_40px_rgba(15,23,42,0.08)]">
+            <p className="text-sm font-semibold text-slate-900">Resultados que clientes relatam:</p>
+            <ul className="mt-4 space-y-3 text-sm text-slate-600">
+              <li className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-base text-indigo-500">north_east</span>
+                Crescimento mais previsível por alinhar marketing, vendas e entrega em uma narrativa única.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-base text-indigo-500">north_east</span>
+                Tempo recuperado – em vez de refazer materiais, basta adaptar o que já foi aprovado no diagnóstico.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-base text-indigo-500">north_east</span>
+                Time confiante para comunicar valor sem depender de fundador(a) em toda conversa.
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2">
           {features.map((feature) => (
             <article
-              key={feature.icon}
-              className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 transition-colors hover:border-primary/50"
+              key={feature.title}
+              className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-transform duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_25px_50px_rgba(79,70,229,0.12)]"
             >
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-                <span className="material-symbols-outlined text-3xl text-white">{feature.icon}</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
-              <p className="mt-3 text-gray-400">{feature.description}</p>
+              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-50 via-transparent to-blue-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <span className="material-symbols-outlined mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-2xl text-indigo-500">
+                {feature.icon}
+              </span>
+              <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">{feature.description}</p>
             </article>
           ))}
         </div>

@@ -4,7 +4,6 @@ import type React from "react"
 
 import { motion, AnimatePresence } from "framer-motion"
 import { Pacifico } from "next/font/google"
-import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { BrandplotCache } from "@/lib/brandplot-cache"
@@ -252,8 +251,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#1a1814]">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.05] via-transparent to-amber-700/[0.05] blur-3xl" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#f1f6ff] via-[#e9efff] to-[#e2f2ff]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),transparent_55%)]" />
 
       <div className="absolute inset-0 overflow-hidden">
         <ElegantShape
@@ -261,7 +260,7 @@ export default function LoginPage() {
           width={600}
           height={140}
           rotate={12}
-          gradient="from-amber-500/[0.15]"
+          gradient="from-sky-300/30"
           className="left-[-10%] md:left-[-5%] top-[15%] md:top-[20%]"
         />
 
@@ -270,7 +269,7 @@ export default function LoginPage() {
           width={500}
           height={120}
           rotate={-15}
-          gradient="from-amber-700/[0.15]"
+          gradient="from-indigo-300/30"
           className="right-[-5%] md:right-[0%] top-[70%] md:top-[75%]"
         />
 
@@ -279,7 +278,7 @@ export default function LoginPage() {
           width={300}
           height={80}
           rotate={-8}
-          gradient="from-amber-600/[0.15]"
+          gradient="from-sky-200/25"
           className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
         />
 
@@ -288,7 +287,7 @@ export default function LoginPage() {
           width={200}
           height={60}
           rotate={20}
-          gradient="from-amber-500/[0.15]"
+          gradient="from-indigo-200/25"
           className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
         />
 
@@ -297,7 +296,7 @@ export default function LoginPage() {
           width={150}
           height={40}
           rotate={-25}
-          gradient="from-amber-400/[0.15]"
+          gradient="from-sky-200/20"
           className="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
         />
       </div>
@@ -310,26 +309,13 @@ export default function LoginPage() {
             variants={fadeUpVariants}
             initial="hidden"
             animate="visible"
-            className="text-center mb-8"
+            className="mb-8 text-center"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
-              <Image
-                src="/images/brilho-original-logo.png"
-                alt="BrandPlot"
-                width={24}
-                height={24}
-                className="rounded-full"
-              />
-              <span className="text-sm text-white/60 tracking-wide">BrandPlot</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
-                {isLogin ? "Bem-vindo de volta" : "Criar conta"}
-              </span>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+              {isLogin ? "Bem-vindo de volta" : "Criar conta"}
             </h1>
 
-            <p className="text-white/60 text-sm">
+            <p className="mt-3 text-sm text-slate-600">
               {isLogin ? "Entre na sua conta para continuar" : "Junte-se à nossa comunidade de marcas"}
             </p>
           </motion.div>
@@ -340,7 +326,7 @@ export default function LoginPage() {
             variants={fadeUpVariants}
             initial="hidden"
             animate="visible"
-            className="bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl"
+            className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 md:p-8 shadow-[0_25px_60px_rgba(15,23,42,0.15)] backdrop-blur-lg"
           >
             <form onSubmit={handleSubmit} className="space-y-6">
               <AnimatePresence mode="wait">
@@ -360,7 +346,7 @@ export default function LoginPage() {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 transition-all duration-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100/60"
                       placeholder="Digite seu nome completo"
                       required={!isLogin}
                     />
@@ -375,7 +361,7 @@ export default function LoginPage() {
                         name="companyName"
                         value={formData.companyName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 transition-all duration-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100/60"
                         placeholder="Digite o nome da sua empresa"
                         required={!isLogin}
                       />
@@ -391,7 +377,7 @@ export default function LoginPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 transition-all duration-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100/60"
                         placeholder="Digite seu telefone (ex: (11) 99999-9999)"
                         required={!isLogin}
                       />
@@ -410,7 +396,7 @@ export default function LoginPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 transition-all duration-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100/60"
                   placeholder="Digite seu e-mail"
                   required
                 />
@@ -427,7 +413,7 @@ export default function LoginPage() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 pr-12 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-slate-900 placeholder:text-slate-400 transition-all duration-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100/60"
                     placeholder="Digite sua senha"
                     required
                   />
@@ -459,7 +445,7 @@ export default function LoginPage() {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 pr-12 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-[#c8b79e]/50 focus:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-slate-900 placeholder:text-slate-400 transition-all duration-300 focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100/60"
                         placeholder="Confirme sua senha"
                         required={!isLogin}
                       />
@@ -495,7 +481,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full group relative px-8 py-4 bg-gradient-to-r from-[#c8b79e] to-[#b09e85] hover:from-[#d0c0a8] hover:to-[#c8b79e] text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-[#1a1814]/40 hover:shadow-xl hover:shadow-[#1a1814]/50 hover:scale-105 border border-[#c8b79e]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="group relative w-full overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-r from-sky-500 to-indigo-500 px-8 py-4 text-base font-semibold text-white shadow-[0_20px_45px_rgba(37,99,235,0.35)] transition-all duration-300 hover:from-sky-400 hover:to-indigo-400 hover:shadow-[0_24px_52px_rgba(37,99,235,0.4)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="relative z-10">
                   {isLoading ? "Carregando..." : (isLogin ? "Entrar" : "Criar conta")}
