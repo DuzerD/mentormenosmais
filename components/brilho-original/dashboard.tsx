@@ -8,30 +8,18 @@ import {
   ArrowRight,
   BarChart3,
   Brain,
-  Flame,
-  Gauge,
   Lightbulb,
   Lock,
-  Medal,
   Palette,
   PenSquare,
   ShieldCheck,
   Smartphone,
   Sparkles,
   Star,
-  Unlock,
 } from "lucide-react"
-import {
-  Radar,
-  RadarChart,
-  PolarAngleAxis,
-  PolarGrid,
-  ResponsiveContainer,
-} from "recharts"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { BrandplotCache } from "@/lib/brandplot-cache"
@@ -306,7 +294,9 @@ function extractFirstName(name: string): string {
 }
 
 function computeMissionDisplays(data: DashboardData): MissionDisplay[] {
-  const unlockedIndex = missionOrder.indexOf(data.highestMissionUnlocked)
+  const highestUnlockedMission =
+    missionOrder.find((mission) => mission === data.highestMissionUnlocked) ?? "missao_1"
+  const unlockedIndex = missionOrder.indexOf(highestUnlockedMission)
   const completed = new Set(data.completedMissions.filter(isMissionKey))
 
   let activeKey: MissionKey | null = null
@@ -316,7 +306,7 @@ function computeMissionDisplays(data: DashboardData): MissionDisplay[] {
   if (!activeKey) {
     activeKey =
       missionOrder.find((key, index) => index <= unlockedIndex && !completed.has(key)) ??
-      data.highestMissionUnlocked
+      highestUnlockedMission
   }
 
   return missionOrder.map((key, index) => {
@@ -555,7 +545,6 @@ export default function Dashboard() {
   const [introWasTriggered, setIntroWasTriggered] = useState(false)
   const [showXpPulse, setShowXpPulse] = useState(false)
   const [showValueToast, setShowValueToast] = useState(false)
-  const [diagnosticModalOpen, setDiagnosticModalOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -666,7 +655,7 @@ export default function Dashboard() {
     return Math.max(0, Math.min(100, Number.isFinite(percentage) ? percentage : 0))
   }, [data.xp, data.xpToNextLevel])
   const activeMission = missions.find((mission) => mission.isActive) ?? missions[0]
-  const activeMissionCta = missionCtaConfig[activeMission.key] ?? missionCtaConfig.missao_1
+  const activeMissionCta = missionCtaConfig[activeMission.key]
   const completedMissionSummaries = useMemo(
     () =>
       missions
@@ -680,10 +669,6 @@ export default function Dashboard() {
     return missions.find((mission) => mission.status !== "completed") ?? null
   }, [missions])
   const xpTarget = data.xpToNextLevel || data.xp + 80
-  const radarData = useMemo(
-    () => data.previousDiagnosis ?? defaultDashboardData.previousDiagnosis,
-    [data.previousDiagnosis],
-  )
 
   return (
     <TooltipProvider delayDuration={120}>
@@ -759,14 +744,6 @@ export default function Dashboard() {
                     </h1>
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    className="rounded-full border border-[#d7d7f3] bg-white px-4 py-2 text-sm font-semibold text-[#5a4aff] shadow-sm transition hover:border-[#b6b6f0] hover:bg-[#f6f5ff]"
-                    onClick={() => setDiagnosticModalOpen(true)}
-                  >
-                    <Gauge className="mr-2 h-4 w-4" />
-                    Ver Diagnóstico Anterior
-                  </Button>
                 </div>
 
                 <p className="max-w-lg text-base text-[#4f4f63]">
@@ -856,9 +833,21 @@ export default function Dashboard() {
                   Acompanhe cada agente e status. Complete para liberar a próxima fase.
                 </p>
               </div>
-              <Badge className="rounded-full bg-[#9e7cf2]/10 px-4 py-2 text-[#7c63d4]">
-                Mentor-Raiz acompanha tudo em tempo real
-              </Badge>
+              <div className="flex w-full flex-col items-start gap-3 sm:w-auto sm:items-end sm:text-right">
+                <Badge className="rounded-full bg-[#9e7cf2]/10 px-4 py-2 text-[#7c63d4] sm:self-end">
+                  Mentor-Raiz acompanha tudo em tempo real
+                </Badge>
+                <Button
+                  asChild
+                  size="lg"
+                  className="group h-auto w-full rounded-full border-none bg-gradient-to-r from-[#7151ff] via-[#9b6cff] to-[#52d5ff] px-7 py-3 text-base font-semibold text-white shadow-[0_14px_30px_rgba(113,81,255,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(113,81,255,0.32)] focus-visible:ring-white/60 focus-visible:ring-offset-0 sm:w-auto"
+                >
+                  <Link href={activeMissionCta.href} className="flex items-center justify-center gap-3">
+                    <span>{activeMissionCta.label}</span>
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+              </div>
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -946,147 +935,6 @@ export default function Dashboard() {
         })}
       </div>
 
-            <div className="mt-8 flex flex-col gap-4 rounded-3xl border border-[#ecebff] bg-[#f8f7ff] p-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3 text-sm text-[#4d4d6c]">
-                <Unlock className="h-5 w-5 text-[#9e7cf2]" />
-                <p>
-                  <strong>{badgeCatalog[0].title}</strong> desbloqueia assim que você concluir a primeira missão.
-                </p>
-              </div>
-              <Button asChild className="group rounded-full bg-gradient-to-r from-[#9e7cf2] to-[#5dd6ff] px-6 py-5 text-base font-semibold text-white shadow-lg shadow-[#9e7cf2]/30 transition hover:shadow-xl">
-                <Link href={activeMissionCta.href} className="flex items-center gap-2">
-                  {activeMissionCta.label}
-                  <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-[#e2e4ff] bg-white p-8 shadow-xl shadow-[#d6d8ff]/40">
-            <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.35em] text-[#9e7cf2]">
-                  <Flame className="h-5 w-5" />
-                  <span>Próximos Passos</span>
-                </div>
-                <div className="rounded-3xl border border-[#ecebff] bg-[#f7f6ff] p-6 shadow-inner shadow-[#dcdaf7]">
-                  <p className="text-base text-[#4d4d6b]">
-                    Você liberou tudo que precisa para começar agora com o Estrategista. Complete a Missão 1 para que o Copywriter e o Designer entrem em cena.
-                  </p>
-                  <div className="mt-6 flex flex-col gap-4 text-sm text-[#585978]">
-                    <div className="flex items-start gap-3">
-                      <Unlock className="mt-0.5 h-4 w-4 text-[#5a4aff]" />
-                      <span>
-                        <strong>Missão ativa:</strong> {activeMission.title} — {activeMission.agent}
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <ArrowRight className="mt-0.5 h-4 w-4 text-[#5a4aff]" />
-                      <span>
-                        Ao concluir, você recebe feedback imediato do Mentor-Raiz e libera acesso ao próximo agente.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-3xl border border-[#e5ecff] bg-gradient-to-br from-[#f6f7ff] to-white p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8d8ec0]">
-                      Primeira vez aqui?
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-[#1c1c2c]">
-                      Bem-vindo à sua Sala da Marca, {firstName}.
-                    </h3>
-                    <p className="mt-3 text-sm text-[#5c5d7a]">
-                      Aqui é onde estratégia vira clareza — e clareza vira resultado. Vamos começar a construir?
-                    </p>
-                  </div>
-                  <Star className="h-8 w-8 text-[#9e7cf2]" />
-                </div>
-
-                <Button asChild className="mt-6 w-full rounded-full bg-[#1c1c1c] py-5 text-sm font-semibold text-white shadow-lg shadow-[#1c1c1c]/20 transition hover:bg-[#2a2a2a]">
-                  <Link href={activeMissionCta.href} className="force-white flex items-center justify-center text-white">
-                    {activeMissionCta.shortLabel}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </section>
-          <section className="relative rounded-3xl border border-[#e2ecff] bg-gradient-to-br from-[#f6f7ff] via-white to-[#f3fbff] p-10 shadow-xl shadow-[#cfe4ff]/40">
-            <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-xl space-y-6">
-                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.3em] text-[#9e7cf2]">
-                  <Medal className="h-5 w-5" />
-                  <span>Reforço de Valor</span>
-                </div>
-                <div className="rounded-3xl border border-[#dcdcff] bg-white/80 p-6 shadow-[0_16px_40px_rgba(158,124,242,0.08)]">
-                  <div className="flex items-start gap-3">
-                    <Brain className="mt-1 h-6 w-6 text-[#9e7cf2]" />
-                    <div>
-                      <p className="font-semibold text-[#2d2d3f]">Mentor-Raiz</p>
-                      <p className="mt-3 text-sm text-[#52526c]">
-                        Cada missão é uma etapa real do seu crescimento de marca.
-                      </p>
-                      <ul className="mt-4 space-y-2 text-sm text-[#565675]">
-                        <li>✔ Uma estratégia clara e diferenciada</li>
-                        <li>✔ Uma mensagem que conecta e vende</li>
-                        <li>✔ Uma identidade visual coerente</li>
-                        <li>✔ Um calendário de postagens pronto</li>
-                        <li>✔ Um plano de melhoria contínua</li>
-                      </ul>
-                      <p className="mt-4 text-sm text-[#52526c]">
-                        Tudo isso aqui dentro, guiado passo a passo.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-1 flex-col gap-6 rounded-3xl border border-[#d4defc] bg-white/90 p-6 shadow-[0_18px_46px_rgba(146,167,255,0.2)]">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-[#1f1f33]">Diagnóstico vs Agora</h3>
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-[#dfe3ff] text-xs font-semibold uppercase tracking-widest text-[#5a4aff]"
-                    onClick={() => setDiagnosticModalOpen(true)}
-                  >
-                    Comparar novamente
-                  </Button>
-                </div>
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart
-                      cx="50%"
-                      cy="50%"
-                      outerRadius="80%"
-                      data={radarData!.map((item) => ({
-                        subject: item.dimension,
-                        score: item.value,
-                      }))}
-                    >
-                      <PolarGrid stroke="#d4defc" />
-                      <PolarAngleAxis
-                        dataKey="subject"
-                        tick={{ fill: "#6b6c8f", fontSize: 12, fontFamily: "inherit" }}
-                      />
-                      <Radar
-                        name="Diagnóstico"
-                        dataKey="score"
-                        stroke="#9e7cf2"
-                        fill="#9e7cf2"
-                        fillOpacity={0.2}
-                        strokeWidth={2}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-sm text-[#5d5e7b]">
-                  Acompanhe como clareza, consistência, visual, execução e estratégia evoluem conforme você completa cada missão.
-                </p>
-              </div>
-            </div>
           </section>
 
           <section className="rounded-3xl border border-[#dbe4ff] bg-white/95 p-8 shadow-xl shadow-[#d2ddff]/40">
@@ -1185,59 +1033,7 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        <Dialog open={diagnosticModalOpen} onOpenChange={setDiagnosticModalOpen}>
-          <DialogContent className="max-w-2xl rounded-3xl border border-[#dee3ff] bg-white/95 p-8 shadow-[0_30px_60px_rgba(158,124,242,0.18)]">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-[#1c1c1c]">
-                Diagnóstico Anterior vs Atual
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-6 grid gap-8 md:grid-cols-2">
-              <div className="space-y-4">
-                <p className="text-sm text-[#5f5f7a]">
-                  Confira onde você estava antes de desbloquear a Sala da Marca. Use esse radar para comparar a evolução em clareza, consistência, visual, execução e estratégia.
-                </p>
-                <div className="rounded-3xl border border-[#ececff] bg-[#f8f7ff] p-5 text-sm text-[#595a7a]">
-                  <p className="font-semibold text-[#4b4c6d]">Dica do Mentor:</p>
-                  <p className="mt-2">
-                    Atualize o diagnóstico sempre que finalizar uma missão. Assim, você enxerga o salto de clareza e mantém o time alinhado.
-                  </p>
-                </div>
-              </div>
-              <div className="h-64 w-full rounded-3xl border border-[#e6e9ff] bg-white/80 p-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart
-                    cx="50%"
-                    cy="50%"
-                    outerRadius="80%"
-                    data={radarData!.map((item) => ({
-                      subject: item.dimension,
-                      score: item.value,
-                    }))}
-                  >
-                    <PolarGrid stroke="#d6d8ff" />
-                    <PolarAngleAxis
-                      dataKey="subject"
-                      tick={{ fill: "#6e6f92", fontSize: 12, fontFamily: "inherit" }}
-                    />
-                    <Radar
-                      name="Diagnóstico Anterior"
-                      dataKey="score"
-                      stroke="#9e7cf2"
-                      fill="#9e7cf2"
-                      fillOpacity={0.2}
-                      strokeWidth={2}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </TooltipProvider>
   )
 }
-
-
-
