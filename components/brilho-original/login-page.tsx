@@ -11,10 +11,6 @@ import { useState, useEffect } from "react"
 import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-  subsets: ["latin"],
-  weight: ["400"],
-})
-
 function ElegantShape({
   className,
   delay = 0,
