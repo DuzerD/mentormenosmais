@@ -14,6 +14,7 @@ function generateIdUnico(companyName: string): string {
 }
 
 const DEFAULT_SUPABASE_URL = process.env.SUPABASE_URL ?? "https://znkfwlpgsxxawucacmda.supabase.co"
+const DEFAULT_ONBOARDING_PASSWORD = process.env.DEFAULT_ONBOARDING_PASSWORD ?? "novamarca123"
 const HAS_SUPABASE = Boolean(process.env.SUPABASE_KEY)
 const ENABLE_MOCK = !HAS_SUPABASE || process.env.NEXT_PUBLIC_DASHBOARD_MOCK === "true"
 
@@ -41,6 +42,13 @@ export async function POST(request: Request) {
 
     const supabase = createClient(DEFAULT_SUPABASE_URL, process.env.SUPABASE_KEY as string)
 
+    const saltRounds = 12
+    let hashedPassword: string | null = null
+
+    if (formData.password) {
+      hashedPassword = await bcrypt.hash(formData.password, saltRounds)
+    }
+
     const updateData: Record<string, any> = {
       nome_cliente: formData.name || null,
       email: formData.email || null,
@@ -48,9 +56,8 @@ export async function POST(request: Request) {
       idUnico: generatedIdUnico,
     }
 
-    if (formData.password) {
-      const saltRounds = 12
-      updateData.senha = await bcrypt.hash(formData.password, saltRounds)
+    if (hashedPassword) {
+      updateData.senha = hashedPassword
     }
 
     if ((!updateData.email || !updateData.telefone) && cachedData?.answers) {
@@ -95,6 +102,12 @@ export async function POST(request: Request) {
       const { error } = await supabase.from("brandplot").update(updateData).eq("id", existing.id)
       dbError = error
     } else {
+      if (!hashedPassword) {
+        hashedPassword = await bcrypt.hash(DEFAULT_ONBOARDING_PASSWORD, saltRounds)
+      }
+
+      updateData.senha = hashedPassword
+
       const insertData = {
         nome_empresa: companyName,
         idUnico: generatedIdUnico,
