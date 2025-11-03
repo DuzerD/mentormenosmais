@@ -408,7 +408,7 @@ function Mission3Content() {
       role: "mentor",
       prompt: "Pronto para transformar essa identidade em presença?",
       actions: [
-        { id: "unlock-mission4", label: "📱 Desbloquear Missão 4", variant: "primary" },
+        { id: "unlock-mission4", label: "\uD83D\uDCF1 Desbloquear Miss\u00e3o 4 - R$ 0,01", variant: "primary" },
         { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
       ],
     })
@@ -862,7 +862,7 @@ function Mission3Content() {
         role: "mentor",
         prompt: "Quer desbloquear a Missão 4?",
         actions: [
-          { id: "unlock-mission4", label: "📱 Desbloquear Missão 4", variant: "primary" },
+          { id: "unlock-mission4", label: "\uD83D\uDCF1 Desbloquear Miss\u00e3o 4 - R$ 0,01", variant: "primary" },
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
         ],
       })

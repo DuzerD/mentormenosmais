@@ -22,19 +22,19 @@ const PRODUCT_CATALOG: Record<CheckoutProduct, ProductConfig> = {
   missao_1: {
     title: "Missão 1 - Estratégia da Marca",
     description: "Desbloqueio individual da Missão 1",
-    unitPrice: 97,
+    unitPrice: 0.01,
     unlocks: "missao_1",
   },
   missao_3: {
     title: "Missão 3 - Identidade Visual",
     description: "Desbloqueio da Missão 3 com o Designer IA",
-    unitPrice: 197,
+    unitPrice: 0.01,
     unlocks: "missao_3",
   },
   jornada_completa: {
     title: "Jornada Completa (Missões 1 a 5)",
     description: "Pacote completo das cinco missões da Menos Mais",
-    unitPrice: 297,
+    unitPrice: 0.01,
     unlocks: "todas",
   },
 }
@@ -191,7 +191,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        init_point: preference.init_point ?? preference.sandbox_init_point ?? null,
+        init_point: preference.init_point ?? null,
         sandbox_init_point: preference.sandbox_init_point ?? null,
         preference_id: preference.id ?? null,
       },

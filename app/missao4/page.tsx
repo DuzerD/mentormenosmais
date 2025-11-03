@@ -817,7 +817,7 @@ function Mission4Content() {
         role: "mentor",
         prompt: "Quer desbloquear a Missao 5 - Analise & Ajuste?",
         actions: [
-          { id: "unlock-mission5", label: "📊 Desbloquear Missão 5", variant: "primary" },
+          { id: "unlock-mission5", label: "\uD83D\uDCCA Desbloquear Miss\u00e3o 5 – R$ 0,01", variant: "primary" },
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
         ],
       })
