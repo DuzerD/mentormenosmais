@@ -542,7 +542,7 @@ function Mission2Experience() {
       }
 
       const json = (await response.json()) as { init_point?: string | null; sandbox_init_point?: string | null }
-      const checkoutUrl = json.sandbox_init_point ?? json.init_point
+      const checkoutUrl = json.init_point ?? json.sandbox_init_point
 
       if (!checkoutUrl) {
         throw new Error("Não recebi o link do checkout")
@@ -711,7 +711,7 @@ function Mission2Experience() {
         prompt: "Pronto para avançar com a Identidade Visual?",
         actions: [
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
-          { id: "unlock-mission3", label: "🎨 Desbloquear Missão 3 – R$ 197", variant: "primary" },
+          { id: "unlock-mission3", label: "🎨 Desbloquear Missão 3 – R$ 0,01", variant: "primary" },
           { id: "restart", label: "Refazer Missão 2", variant: "secondary" },
         ],
       },
@@ -1079,7 +1079,7 @@ function Mission2Experience() {
         role: "mentor",
         prompt: "Pronto para desbloquear a próxima etapa com o Designer?",
         actions: [
-          { id: "unlock-mission3", label: "🎨 Desbloquear Missão 3 – R$ 197", variant: "primary" },
+          { id: "unlock-mission3", label: "🎨 Desbloquear Missão 3 – R$ 0,01", variant: "primary" },
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
         ],
       })

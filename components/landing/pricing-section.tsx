@@ -31,7 +31,7 @@ const plans: Plan[] = [
   {
     name: "Jornada Completa Mentoor",
     subtitle: "Missões 0 a 5 liberadas",
-    price: "R$ 297",
+    price: "R$ 0,01",
     description:
       "Para quem quer todo o time IA acompanhando a execução. Liberamos todas as missões para construir estratégia, ativos e operação completa.",
     features: [
@@ -47,7 +47,7 @@ const plans: Plan[] = [
   {
     name: "Missão 1 - Estratégia da Marca",
     subtitle: "Comece pela base",
-    price: "R$ 97",
+    price: "R$ 0,01",
     description:
       "Perfeito para validar o método com foco total na estratégia. Você constrói a base da marca com o Estrategista Mentoor.",
     features: [

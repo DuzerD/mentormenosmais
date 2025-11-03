@@ -610,7 +610,7 @@ function Mission5Content() {
         role: "mentor",
         prompt: "Quer manter o time por perto na Sala da Marca?",
         actions: [
-          { id: "explore-sala", label: "Assinar por R$19,90/mes", variant: "primary" },
+          { id: "explore-sala", label: "Assinar por R$0,01/mes", variant: "primary" },
           { id: "go-dashboard", label: "Voltar para o dashboard" },
         ],
       })

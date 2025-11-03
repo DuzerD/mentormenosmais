@@ -1319,15 +1319,15 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
       id: "missao-1-individual",
       title: "Caminho 1 – Missão 1 Individual",
       subtitle: "Perfeito se você quer validar o método com foco total na Estratégia.",
-      price: "R$97",
-      priceNote: "Pagamento único. Liberação da Missão 1 após confirmação.",
+      price: "R$0,01",
+      priceNote: "Valor simbólico de teste. Liberação da Missão 1 após confirmação.",
       features: [
         "Acesso completo à Missão 1 – Estratégia da Marca",
         "Guia passo a passo com o Estrategista de Marca",
         "Mapeamento de proposta de valor e público ideal",
         "Plano estratégico inicial e próximos passos priorizados",
       ],
-      checkoutUrl: "https://mpago.la/1JHa5ZN",
+      checkoutUrl: "",
       liberacao: "missao_1",
       buttonLabel: "Liberar Missão 1",
     },
@@ -1335,15 +1335,15 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
       id: "jornada-completa",
       title: "Caminho 2 – Jornada Completa (5 Missões)",
       subtitle: "Para quem quer todo o time IA acompanhando a execução.",
-      price: "R$297",
-      priceNote: "Pagamento único. Economia de 40% vs desbloqueios individuais.",
+      price: "R$0,01",
+      priceNote: "Valor simbólico de teste. Liberação completa após confirmação.",
       features: [
         "Tudo da Missão 1 liberado imediatamente",
         "Missões 2 a 5 com Copywriter, Designer, Social Media e Analista",
         "Entrega da mensagem, identidade visual e kit de conteúdos prontos",
         "Suporte dos agentes IA para implementar semana a semana",
       ],
-      checkoutUrl: "https://mpago.la/2Yq4Nun",
+      checkoutUrl: "",
       liberacao: "jornada_completa",
       buttonLabel: "Liberar Jornada Completa",
       badge: "Mais escolhido",
@@ -1414,7 +1414,7 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
       }
 
       const json = (await response.json()) as { init_point?: string | null; sandbox_init_point?: string | null }
-      return json.sandbox_init_point ?? json.init_point ?? null
+      return json.init_point ?? json.sandbox_init_point ?? null
     } catch (error) {
       console.error("Erro ao abrir checkout do Mercado Pago:", error)
       return null
