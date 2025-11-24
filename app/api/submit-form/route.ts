@@ -4,51 +4,68 @@ export async function POST(request: Request) {
   try {
     const formData = await request.json()
 
-    // Prepare email content
+    const resendApiKey = process.env.RESEND_API_KEY
+    const fromEmail = process.env.APPLICATION_FROM_EMAIL || "onboarding@resend.dev"
+    const toEmail = process.env.APPLICATION_TO_EMAIL || "victor.romaris@gmail.com"
+
+    if (!resendApiKey) {
+      console.error("[v0] Missing RESEND_API_KEY env var")
+      return NextResponse.json(
+        { success: false, message: "Configuracao de email ausente." },
+        { status: 500 }
+      )
+    }
+
+    const marketingValue = formData.marketingSpend || formData.marketing || ""
+    const employeesValue = formData.employees || formData.teamSize || ""
+    const businessValue = formData.businessDescription || formData.businessModel || ""
+
     const emailContent = `
-Nova Aplicação Recebida
+Nova Aplicacao Recebida
 ======================
 
-Nome: ${formData.name}
-Instagram: ${formData.instagram}
-Faturamento Mensal: ${formData.revenue}
-Gasto em Marketing: ${formData.marketingSpend}
-Número de Colaboradores: ${formData.employees}
+Nome: ${formData.name || ""}
+E-mail: ${formData.email || ""}
+Telefone: ${formData.phone || ""}
+Instagram: ${formData.instagram || ""}
+Faturamento: ${formData.revenue || ""}
+Gasto em Marketing: ${marketingValue}
+Numero de Colaboradores: ${employeesValue}
 
-Descrição do Negócio:
-${formData.businessDescription}
+Descricao do Negocio / Modelo de Negocio:
+${businessValue}
 
 ---
-Data de Submissão: ${new Date().toLocaleString("pt-BR")}
+Data de Submissao: ${new Date().toLocaleString("pt-BR")}
     `.trim()
 
-    // Send email using a simple mailto approach or email service
-    // For production, you would use an email service like Resend, SendGrid, or Postmark
-    console.log("[v0] Form submission:", formData)
-    console.log("[v0] Email to be sent to: victor.romaris@gmail.com")
-    console.log("[v0] Email content:", emailContent)
-
-    // Here you would integrate with an email service
-    // Example with fetch to an email API:
-    /*
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: 'formulario@seudominio.com',
-        to: 'victor.romaris@gmail.com',
-        subject: 'Nova Aplicação Recebida',
+        from: fromEmail,
+        to: [toEmail],
+        subject: "Nova Aplicacao Recebida",
         text: emailContent,
       }),
     })
-    */
 
-    return NextResponse.json({ success: true, message: "Formulário enviado com sucesso!" })
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text()
+      console.error("[v0] Resend error:", errorText)
+      return NextResponse.json(
+        { success: false, message: "Erro ao enviar formulario." },
+        { status: 500 }
+      )
+    }
+
+    console.log("[v0] Form submission sent via Resend:", { toEmail, fromEmail })
+    return NextResponse.json({ success: true, message: "Formulario enviado com sucesso!" })
   } catch (error) {
     console.error("[v0] Error submitting form:", error)
-    return NextResponse.json({ success: false, message: "Erro ao enviar formulário" }, { status: 500 })
+    return NextResponse.json({ success: false, message: "Erro ao enviar formulario" }, { status: 500 })
   }
 }

@@ -75,34 +75,31 @@ export default function AplicacaoPage() {
   }, [formData, step])
 
   const progressValue = Math.min((step / totalSteps) * 100, 100)
-  const whatsappNumber = (process.env.NEXT_PUBLIC_WHATSAPP_TO || "+5511974564367").replace(/[^0-9]/g, "")
-
-  const buildWhatsappMessage = (data: FormState) => {
-    return [
-      "Nova aplicacao recebida:",
-      `Nome: ${data.name}`,
-      `E-mail: ${data.email}`,
-      `Telefone: ${data.phone}`,
-      `Instagram: ${data.instagram}`,
-      `Faturamento: ${data.revenue}`,
-      `Gasto em marketing: ${data.marketing}`,
-      `Colaboradores: ${data.teamSize}`,
-      `Modelo de negocio: ${data.businessModel}`,
-    ].join("\n")
-  }
 
   const handleNext = async () => {
     if (step === totalSteps) {
       setSendError("")
       setIsSending(true)
       try {
-        const message = buildWhatsappMessage(formData)
-        const url = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`
-        window.open(url, "_blank")
+        const response = await fetch("/api/submit-form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formData,
+            marketingSpend: formData.marketing,
+            employees: formData.teamSize,
+            businessDescription: formData.businessModel,
+          }),
+        })
+
+        const result = await response.json().catch(() => ({}))
+        if (!response.ok || !result.success) {
+          throw new Error(result?.message || "Erro ao enviar aplicacao.")
+        }
 
         setSubmitted(true)
       } catch (error) {
-        setSendError("Nao foi possivel abrir o WhatsApp agora. Tente novamente.")
+        setSendError("Nao foi possivel enviar sua aplicacao por email. Tente novamente.")
       } finally {
         setIsSending(false)
       }
