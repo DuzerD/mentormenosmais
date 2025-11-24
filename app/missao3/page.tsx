@@ -116,6 +116,7 @@ type BrandRecord = {
   xpProximoNivel?: number | null
   comparativoPercentual?: number | null
   nivelAtual?: string | null
+  planoSelecionado?: string | null
 }
 
 const MotionDiv = motion.div
@@ -163,6 +164,63 @@ const missionProgress = [
   },
 ]
 
+function normalizePlanIdentifier(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  return value.trim().toLowerCase().replace(/_/g, "-")
+}
+
+function hasFullJourneyAccess(
+  record: BrandRecord | null,
+  metadata: Record<string, unknown> | null,
+): boolean {
+  const normalize = (candidate: unknown) => normalizePlanIdentifier(candidate)
+
+  const missionValue = normalize(record?.missaoLiberada)
+  if (missionValue === "todas" || missionValue === "jornada-completa") {
+    return true
+  }
+
+  if (metadata) {
+    const metadataFullJourney =
+      typeof (metadata as { fullJourney?: unknown }).fullJourney === "boolean"
+        ? ((metadata as { fullJourney?: boolean }).fullJourney as boolean)
+        : false
+    if (metadataFullJourney) {
+      return true
+    }
+
+    const lastPaymentCandidate =
+      typeof (metadata as { lastPayment?: unknown }).lastPayment === "object" &&
+      (metadata as { lastPayment?: unknown }).lastPayment !== null
+        ? ((metadata as { lastPayment: Record<string, unknown> }).lastPayment as Record<
+            string,
+            unknown
+          >)
+        : null
+
+    if (lastPaymentCandidate) {
+      const unlocksValue = normalize(lastPaymentCandidate.unlocks)
+      const statusValue =
+        typeof lastPaymentCandidate.status === "string"
+          ? lastPaymentCandidate.status.toLowerCase()
+          : null
+      if (unlocksValue === "todas" && statusValue && ["approved", "authorized"].includes(statusValue)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+function buildMission4UnlockAction(hasFullJourney: boolean) {
+  return {
+    id: "unlock-mission4",
+    label: hasFullJourney ? "Ir para a Missão 4 ->" : "📱 Desbloquear Missão 4 - R$ 0,01",
+    variant: "primary" as const,
+  }
+}
+
 export default function Mission3Page() {
   return (
     <ProtectedRoute>
@@ -185,6 +243,7 @@ function Mission3Content() {
   const [brandRecord, setBrandRecord] = useState<BrandRecord | null>(null)
   const [strategyData, setStrategyData] = useState<Record<string, unknown> | null>(null)
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
+  const [hasFullJourneyPlan, setHasFullJourneyPlan] = useState(false)
   const [finalResults, setFinalResults] = useState<Mission3Results | null>(null)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
   const [creatorName, setCreatorName] = useState<string | null>(null)
@@ -216,6 +275,40 @@ function Mission3Content() {
       fetchBrandRecord(idUnico)
     }
   }, [idUnico])
+
+  useEffect(() => {
+    setHasFullJourneyPlan(hasFullJourneyAccess(brandRecord, metadata))
+  }, [brandRecord, metadata])
+
+  useEffect(() => {
+    if (!hasFullJourneyPlan) return
+    setMessages((previous) => {
+      let mutated = false
+      const desired = buildMission4UnlockAction(true)
+      const updated = previous.map((message) => {
+        if (message.kind !== "cta") {
+          return message
+        }
+        let actionMutated = false
+        const actions = message.actions.map((action) => {
+          if (action.id !== "unlock-mission4") {
+            return action
+          }
+          if (action.label === desired.label && action.variant === desired.variant) {
+            return action
+          }
+          actionMutated = true
+          return { ...action, label: desired.label, variant: desired.variant }
+        })
+        if (actionMutated) {
+          mutated = true
+          return { ...message, actions }
+        }
+        return message
+      })
+      return mutated ? updated : previous
+    })
+  }, [hasFullJourneyPlan])
 
   useEffect(() => {
     hydrateMission2Snapshot()
@@ -282,6 +375,8 @@ function Mission3Content() {
       tone: "note",
       text: "Mas relaxa — você não vai escolher paletas nem fontes aleatórias. Eu crio, você só sente o que combina com a sua marca.",
     })
+    const journeyAccess =
+      typeof fullJourneyAccess === "boolean" ? fullJourneyAccess : hasFullJourneyPlan
     appendMessage({
       id: nextMessageId(),
       kind: "cta",
@@ -332,6 +427,17 @@ function Mission3Content() {
       const record = json.data
       setBrandRecord(record)
 
+      let metadataParsed: Record<string, unknown> | null = null
+      if (record.onboardingMetadata) {
+        metadataParsed =
+          typeof record.onboardingMetadata === "string"
+            ? (JSON.parse(record.onboardingMetadata) as Record<string, unknown>)
+            : (record.onboardingMetadata as Record<string, unknown>)
+      }
+      setMetadata(metadataParsed)
+      const fullJourneyAccess = hasFullJourneyAccess(record, metadataParsed)
+      setHasFullJourneyPlan(fullJourneyAccess)
+
       if (record.estrategia) {
         const strategy =
           typeof record.estrategia === "string" ? (JSON.parse(record.estrategia) as Record<string, unknown>) : record.estrategia
@@ -349,23 +455,15 @@ function Mission3Content() {
 
         const storedMission3 = strategy?.missao3 as Mission3Results | undefined
         if (storedMission3?.finalImageUrl) {
-          restoreMission3(storedMission3)
+          restoreMission3(storedMission3, fullJourneyAccess)
         }
-      }
-
-      if (record.onboardingMetadata) {
-        const metadataParsed =
-          typeof record.onboardingMetadata === "string"
-            ? (JSON.parse(record.onboardingMetadata) as Record<string, unknown>)
-            : (record.onboardingMetadata as Record<string, unknown>)
-        setMetadata(metadataParsed ?? null)
       }
     } catch (error) {
       console.warn("Falha ao restaurar dados da marca (Missão 3):", error)
     }
   }
 
-  function restoreMission3(results: Mission3Results) {
+  function restoreMission3(results: Mission3Results, fullJourneyAccess?: boolean) {
     setIsRestoring(true)
     setEnergyChoice(results.energy)
     setLayoutPreference(results.layoutPreference)
@@ -408,7 +506,7 @@ function Mission3Content() {
       role: "mentor",
       prompt: "Pronto para transformar essa identidade em presença?",
       actions: [
-        { id: "unlock-mission4", label: "\uD83D\uDCF1 Desbloquear Miss\u00e3o 4 - R$ 0,01", variant: "primary" },
+        buildMission4UnlockAction(journeyAccess),
         { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
       ],
     })
@@ -517,7 +615,11 @@ function Mission3Content() {
     }
 
     if (optionId === "unlock-mission4") {
-      handleUnlockMission4()
+      if (hasFullJourneyPlan) {
+        router.push("/missao4")
+      } else {
+        handleUnlockMission4()
+      }
       return
     }
 
@@ -862,7 +964,7 @@ function Mission3Content() {
         role: "mentor",
         prompt: "Quer desbloquear a Missão 4?",
         actions: [
-          { id: "unlock-mission4", label: "\uD83D\uDCF1 Desbloquear Miss\u00e3o 4 - R$ 0,01", variant: "primary" },
+          buildMission4UnlockAction(hasFullJourneyPlan),
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
         ],
       })
@@ -896,6 +998,14 @@ function Mission3Content() {
   }
 
   function handleUnlockMission4() {
+    if (hasFullJourneyPlan) {
+      toast({
+        title: "Missão 4 liberada",
+        description: "Seu plano Jornada Completa já cobre a próxima etapa. Vou te levar direto para ela.",
+      })
+      router.push("/missao4")
+      return
+    }
     toast({
       title: "Missão 4 — Conteúdo e Presença",
       description: "Você será redirecionado para o checkout seguro do Mercado Pago.",

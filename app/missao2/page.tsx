@@ -24,7 +24,13 @@ import { toast } from "@/hooks/use-toast"
 const MotionDiv = motion.div
 
 type ChatRole = "copywriter" | "user" | "mentor" | "system"
-type MissionPhase = "intro" | "collectingPhrase" | "selectingOption" | "contentDecision" | "complete"
+type MissionPhase =
+  | "intro"
+  | "collectingPhrase"
+  | "selectingOption"
+  | "selectingBio"
+  | "contentDecision"
+  | "complete"
 type StageLoading = "variations" | "assets" | "content" | null
 
 type VariationResponse = {
@@ -35,6 +41,7 @@ type VariationResponse = {
 type AssetsResponse = {
   subtitle: string
   instagramBio: string
+  instagramBioOptions: string[]
   positioningNote?: string
 }
 
@@ -51,7 +58,10 @@ type Mission2Results = {
   selectedPhrase: string
   subtitle: string
   bio: string
+  bioOptions: string[]
+  selectedBioIndex: number
   insight?: string
+  positioningNote?: string
   contentIdea?: ContentResponse | null
   generatedAt: string
 }
@@ -67,6 +77,14 @@ type ChatMessage =
   | {
       id: string
       kind: "options"
+      role: "copywriter"
+      prompt: string
+      options: string[]
+      insight?: string
+    }
+  | {
+      id: string
+      kind: "bioOptions"
       role: "copywriter"
       prompt: string
       options: string[]
@@ -102,6 +120,7 @@ type BrandRecord = {
   comparativoPercentual?: number | null
   nivelAtual?: string | null
   missaoLiberada?: string | null
+  planoSelecionado?: string | null
 }
 
 const MISSION_STORAGE_KEY = "missao2_result"
@@ -129,6 +148,63 @@ const missionProgress = [
   },
 ]
 
+function normalizePlanIdentifier(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  return value.trim().toLowerCase().replace(/_/g, "-")
+}
+
+function hasFullJourneyAccess(
+  record: BrandRecord | null,
+  metadata: Record<string, unknown> | null,
+): boolean {
+  const normalize = (candidate: unknown) => normalizePlanIdentifier(candidate)
+
+  const missionValue = normalize(record?.missaoLiberada)
+  if (missionValue === "todas" || missionValue === "jornada-completa") {
+    return true
+  }
+
+  if (metadata) {
+    const metadataFullJourney =
+      typeof (metadata as { fullJourney?: unknown }).fullJourney === "boolean"
+        ? ((metadata as { fullJourney?: boolean }).fullJourney as boolean)
+        : false
+    if (metadataFullJourney) {
+      return true
+    }
+
+    const lastPaymentCandidate =
+      typeof (metadata as { lastPayment?: unknown }).lastPayment === "object" &&
+      (metadata as { lastPayment?: unknown }).lastPayment !== null
+        ? ((metadata as { lastPayment: Record<string, unknown> }).lastPayment as Record<
+            string,
+            unknown
+          >)
+        : null
+
+    if (lastPaymentCandidate) {
+      const unlocksValue = normalize(lastPaymentCandidate.unlocks)
+      const statusValue =
+        typeof lastPaymentCandidate.status === "string"
+          ? lastPaymentCandidate.status.toLowerCase()
+          : null
+      if (unlocksValue === "todas" && statusValue && ["approved", "authorized"].includes(statusValue)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+function buildMission3UnlockAction(hasFullJourney: boolean) {
+  return {
+    id: "unlock-mission3",
+    label: hasFullJourney ? "Ir para a Missão 3 ->" : "🎨 Desbloquear Missão 3 – R$ 0,01",
+    variant: "primary" as const,
+  }
+}
+
 export default function Mission2Page() {
   return (
     <ProtectedRoute>
@@ -139,16 +215,26 @@ export default function Mission2Page() {
 
 function ChatBubble({
   message,
-  currentSelection,
-  onSelectOption,
-  disableOptions,
+  variationSelection,
+  onSelectVariation,
+  disableVariationOptions,
   onAction,
+  bioSelection,
+  onSelectBioOption,
+  disableBioOptions,
+  onRequestMoreBioOptions,
+  activeBioOptionsId,
 }: {
   message: ChatMessage
-  currentSelection: number | null
-  onSelectOption: (index: number) => void
-  disableOptions: boolean
+  variationSelection: number | null
+  onSelectVariation: (index: number) => void
+  disableVariationOptions: boolean
   onAction: (actionId: string) => void
+  bioSelection: number | null
+  onSelectBioOption: (index: number) => void
+  disableBioOptions: boolean
+  onRequestMoreBioOptions: () => void
+  activeBioOptionsId: string | null
 }) {
   if (message.kind === "loading") {
     return (
@@ -168,7 +254,7 @@ function ChatBubble({
           <p className="text-sm font-semibold text-[#332c66]">{message.prompt}</p>
           <ul className="mt-3 space-y-3">
             {message.options.map((option, index) => {
-              const isSelected = currentSelection === index
+              const isSelected = variationSelection === index
               return (
                 <li
                   key={option}
@@ -184,8 +270,8 @@ function ChatBubble({
                     <Button
                       size="sm"
                       variant={isSelected ? "default" : "outline"}
-                      onClick={() => onSelectOption(index)}
-                      disabled={disableOptions}
+                      onClick={() => onSelectVariation(index)}
+                      disabled={disableVariationOptions}
                       className={cn(
                         "rounded-full px-4 py-1 text-xs font-semibold",
                         isSelected
@@ -205,6 +291,67 @@ function ChatBubble({
               {message.insight}
             </p>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  if (message.kind === "bioOptions") {
+    const isActive = activeBioOptionsId === message.id
+    return (
+      <div className="flex w-full justify-start">
+        <div className="w-full max-w-[90%] rounded-3xl border border-[#dcd9ff] bg-[#f8f7ff] p-4 text-sm text-[#2f2a5c] shadow">
+          <p className="text-sm font-semibold text-[#332c66]">{message.prompt}</p>
+          <ul className="mt-3 space-y-3">
+            {message.options.map((option, index) => {
+              const isSelected = bioSelection === index
+              return (
+                <li
+                  key={`${message.id}-bio-${index}`}
+                  className={cn(
+                    "rounded-2xl border px-4 py-3 transition",
+                    isSelected
+                      ? "border-[#9b87ff] bg-white text-[#2f2a5c] shadow-[0_12px_30px_rgba(130,118,255,0.18)]"
+                      : "border-[#e6e1ff] bg-white/75 text-[#4f4c6d]",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{option}</span>
+                    <Button
+                      size="sm"
+                      variant={isSelected ? "default" : "outline"}
+                      onClick={() => onSelectBioOption(index)}
+                      disabled={disableBioOptions || !isActive}
+                      className={cn(
+                        "rounded-full px-4 py-1 text-xs font-semibold",
+                        isSelected
+                          ? "bg-gradient-to-r from-[#a17cff] to-[#5fd6ff] text-white shadow-lg shadow-[#b9b0ff]/60"
+                          : "border-[#d6d1ff] text-[#6a58c8] hover:bg-[#f0edff]",
+                      )}
+                    >
+                      {isSelected ? "Selecionada" : "Escolher"}
+                    </Button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          {message.insight && (
+            <p className="mt-3 rounded-2xl border border-dashed border-[#d9d3ff] bg-white/70 px-3 py-2 text-xs text-[#6a68a0]">
+              {message.insight}
+            </p>
+          )}
+          <div className="mt-4 flex justify-center">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onRequestMoreBioOptions}
+              disabled={disableBioOptions || !isActive}
+              className="rounded-full border-[#d6d1ff] px-5 py-1 text-xs font-semibold text-[#6a58c8] hover:bg-[#f0edff]"
+            >
+              Quero ver outras bios
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -417,6 +564,27 @@ function normalizeMission2Result(raw: Record<string, unknown>): Mission2Results 
       typeof raw.selectedPhrase === "string" ? raw.selectedPhrase : variations[selectedIndex] ?? ""
     const subtitle = typeof raw.subtitle === "string" ? raw.subtitle : ""
     const bio = typeof raw.bio === "string" ? raw.bio : ""
+    const bioOptions = Array.isArray((raw as Record<string, unknown>).bioOptions)
+      ? ((raw as Record<string, unknown>).bioOptions as unknown[]).filter(
+          (value): value is string => typeof value === "string",
+        )
+      : bio
+        ? [bio]
+        : []
+    const selectedBioIndex =
+      typeof (raw as Record<string, unknown>).selectedBioIndex === "number" &&
+      (raw as Record<string, unknown>).selectedBioIndex >= 0
+        ? Math.min(
+            (raw as Record<string, unknown>).selectedBioIndex as number,
+            Math.max(bioOptions.length - 1, 0),
+          )
+        : bioOptions.length > 0
+          ? 0
+          : 0
+    const positioningNote =
+      typeof (raw as Record<string, unknown>).positioningNote === "string"
+        ? ((raw as Record<string, unknown>).positioningNote as string)
+        : undefined
     const insight = typeof raw.insight === "string" ? raw.insight : undefined
     const generatedAt =
       typeof raw.generatedAt === "string" && !Number.isNaN(Date.parse(raw.generatedAt))
@@ -443,7 +611,10 @@ function normalizeMission2Result(raw: Record<string, unknown>): Mission2Results 
       selectedPhrase,
       subtitle,
       bio,
+      bioOptions: [...bioOptions],
+      selectedBioIndex,
       insight,
+      positioningNote,
       contentIdea,
       generatedAt,
     }
@@ -471,6 +642,7 @@ function Mission2Experience() {
   const [brandRecord, setBrandRecord] = useState<BrandRecord | null>(null)
   const [strategyData, setStrategyData] = useState<Record<string, unknown> | null>(null)
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
+  const [hasFullJourneyPlan, setHasFullJourneyPlan] = useState(false)
   const [userPhraseInput, setUserPhraseInput] = useState("")
   const [userPhrase, setUserPhrase] = useState("")
   const [variations, setVariations] = useState<string[]>([])
@@ -478,6 +650,10 @@ function Mission2Experience() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [subtitle, setSubtitle] = useState("")
   const [bio, setBio] = useState("")
+  const [bioOptions, setBioOptions] = useState<string[]>([])
+  const [selectedBioIndex, setSelectedBioIndex] = useState<number | null>(null)
+  const [positioningNote, setPositioningNote] = useState<string | null>(null)
+  const [activeBioMessageId, setActiveBioMessageId] = useState<string | null>(null)
   const [contentIdea, setContentIdea] = useState<ContentResponse | null>(null)
   const [finalResults, setFinalResults] = useState<Mission2Results | null>(null)
   const [restoring, setRestoring] = useState(false)
@@ -515,6 +691,14 @@ function Mission2Experience() {
   }
 
   async function openMercadoPagoCheckout() {
+    if (hasFullJourneyPlan) {
+      toast({
+        title: "Plano completo ativo",
+        description: "Você já tem acesso à Missão 3. Vou te levar direto para lá.",
+      })
+      router.push("/missao3")
+      return
+    }
     if (!idUnico) {
       toast({
         title: "Ops, falta uma informação",
@@ -653,9 +837,10 @@ function Mission2Experience() {
         }
 
         const parsedMetadata = parseRecordField<Record<string, unknown>>(data.onboardingMetadata)
-        if (parsedMetadata) {
-          setMetadata(parsedMetadata)
-        }
+        const metadataObject = parsedMetadata ?? null
+        setMetadata(metadataObject)
+        const fullJourneyAccess = hasFullJourneyAccess(data, metadataObject)
+        setHasFullJourneyPlan(fullJourneyAccess)
 
         const parsedStrategy = parseRecordField<Record<string, unknown>>(data.estrategia)
         if (parsedStrategy) {
@@ -664,7 +849,7 @@ function Mission2Experience() {
           if (mission2Raw && typeof mission2Raw === "object" && !finalResults) {
             const restored = normalizeMission2Result(mission2Raw as Record<string, unknown>)
             if (restored) {
-              hydrateFromStoredResults(restored)
+              hydrateFromStoredResults(restored, fullJourneyAccess)
             }
           }
         }
@@ -678,6 +863,40 @@ function Mission2Experience() {
     }
   }, [idUnico, creatorName, finalResults])
 
+  useEffect(() => {
+    setHasFullJourneyPlan(hasFullJourneyAccess(brandRecord, metadata))
+  }, [brandRecord, metadata])
+
+  useEffect(() => {
+    if (!hasFullJourneyPlan) return
+    setMessages((previous) => {
+      let mutated = false
+      const updated = previous.map((message) => {
+        if (message.kind !== "cta") {
+          return message
+        }
+        let actionMutated = false
+        const desired = buildMission3UnlockAction(true)
+        const actions = message.actions.map((action) => {
+          if (action.id !== "unlock-mission3") {
+            return action
+          }
+          if (action.label === desired.label && action.variant === desired.variant) {
+            return action
+          }
+          actionMutated = true
+          return { ...action, label: desired.label, variant: desired.variant }
+        })
+        if (actionMutated) {
+          mutated = true
+          return { ...message, actions }
+        }
+        return message
+      })
+      return mutated ? updated : previous
+    })
+  }, [hasFullJourneyPlan])
+
   function hydrateFromStoredResults(results: Mission2Results) {
     setRestoring(true)
     setFinalResults(results)
@@ -687,8 +906,27 @@ function Mission2Experience() {
     setSelectedIndex(results.selectedIndex)
     setSubtitle(results.subtitle)
     setBio(results.bio)
+    const availableBioOptions =
+      results.bioOptions && results.bioOptions.length > 0
+        ? results.bioOptions
+        : results.bio
+          ? [results.bio]
+          : []
+    setBioOptions(availableBioOptions)
+    const storedBioIndex =
+      typeof results.selectedBioIndex === "number" && results.selectedBioIndex >= 0
+        ? Math.min(results.selectedBioIndex, Math.max(availableBioOptions.length - 1, 0))
+        : availableBioOptions.length > 0
+          ? 0
+          : -1
+    setSelectedBioIndex(storedBioIndex >= 0 ? storedBioIndex : null)
+    setPositioningNote(results.positioningNote ?? null)
+    setActiveBioMessageId(null)
     setContentIdea(results.contentIdea ?? null)
     setPhase("complete")
+
+    const journeyAccess =
+      typeof fullJourneyOverride === "boolean" ? fullJourneyOverride : hasFullJourneyPlan
 
     const summaryMessages: ChatMessage[] = [
       {
@@ -711,7 +949,7 @@ function Mission2Experience() {
         prompt: "Pronto para avançar com a Identidade Visual?",
         actions: [
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
-          { id: "unlock-mission3", label: "🎨 Desbloquear Missão 3 – R$ 0,01", variant: "primary" },
+          buildMission3UnlockAction(journeyAccess),
           { id: "restart", label: "Refazer Missão 2", variant: "secondary" },
         ],
       },
@@ -725,11 +963,11 @@ function Mission2Experience() {
     const statuses = {
       frase: selectedIndex !== null,
       subtitle: Boolean(subtitle),
-      bio: Boolean(bio),
+      bio: selectedBioIndex !== null && Boolean(bio),
       gancho: phase === "complete" && Boolean(finalResults?.contentIdea || finalResults),
     }
     return statuses
-  }, [selectedIndex, subtitle, bio, phase, finalResults])
+  }, [selectedIndex, subtitle, bio, selectedBioIndex, phase, finalResults])
 
   function handleAction(actionId: string) {
     if (actionId === "start") {
@@ -754,7 +992,11 @@ function Mission2Experience() {
     }
 
     if (actionId === "unlock-mission3") {
-      void openMercadoPagoCheckout()
+      if (hasFullJourneyPlan) {
+        router.push("/missao3")
+      } else {
+        void openMercadoPagoCheckout()
+      }
       return
     }
 
@@ -781,6 +1023,10 @@ function Mission2Experience() {
     setSelectedIndex(null)
     setSubtitle("")
     setBio("")
+    setBioOptions([])
+    setSelectedBioIndex(null)
+    setPositioningNote(null)
+    setActiveBioMessageId(null)
     setContentIdea(null)
     setPhase("collectingPhrase")
 
@@ -885,45 +1131,42 @@ function Mission2Experience() {
       }
       const payload = await response.json()
       const data = payload?.data as AssetsResponse | undefined
-      if (!data?.subtitle || !data?.instagramBio) {
-        throw new Error("Resposta incompleta da IA para subtítulo ou bio.")
+      if (!data?.subtitle || !data?.instagramBio || !data?.instagramBioOptions?.length) {
+        throw new Error("Resposta incompleta da IA para subtitulo ou bio.")
       }
 
       setSubtitle(data.subtitle)
-      setBio(data.instagramBio)
+      setPositioningNote(data.positioningNote ?? null)
+      const bioOptionsList = data.instagramBioOptions.length ? data.instagramBioOptions : [data.instagramBio]
+      setBioOptions(bioOptionsList)
+      setSelectedBioIndex(null)
+      setBio("")
 
       replaceMessage(loadingId, {
         id: nextMessageId(),
         kind: "text",
         role: "copywriter",
-        text:
-          "Perfeito. Essa frase sozinha já vende. Mas com um subtítulo e uma bio assim, ninguém fica em dúvida:",
+        text: "Perfeito. Subtitulo encaixado. Agora escolhe qual bio segura esse brilho:",
       })
       appendMessage({
         id: nextMessageId(),
         kind: "text",
         role: "copywriter",
         tone: "note",
-        text: `💬 Subtítulo: ${data.subtitle}
-📱 Bio: ${data.instagramBio}`,
+        text: `💬 Subtítulo: ${data.subtitle}`,
       })
+      const bioMessageId = nextMessageId()
+      appendMessage({
+        id: bioMessageId,
+        kind: "bioOptions",
+        role: "copywriter",
+        prompt: "Qual dessas bios te representa melhor?",
+        options: bioOptionsList,
+        insight: data.positioningNote,
+      })
+      setActiveBioMessageId(bioMessageId)
+      setPhase("selectingBio")
 
-      setPhase("contentDecision")
-      appendMessage({
-        id: nextMessageId(),
-        kind: "text",
-        role: "copywriter",
-        text: "Quer que eu já puxe uma ideia de post pra você começar a aplicar isso?",
-      })
-      appendMessage({
-        id: nextMessageId(),
-        kind: "cta",
-        role: "copywriter",
-        actions: [
-          { id: "generate-content", label: "Sim! 💡", variant: "primary" },
-          { id: "skip-content", label: "Depois", variant: "secondary" },
-        ],
-      })
     } catch (error) {
       console.error("Erro ao gerar subtítulo e bio:", error)
       replaceMessage(loadingId, {
@@ -943,8 +1186,125 @@ function Mission2Experience() {
     }
   }
 
+  function handleSelectBioOption(index: number) {
+    if (loadingStage || phase !== "selectingBio") return
+    const option = bioOptions[index]
+    if (!option) return
+
+    setSelectedBioIndex(index)
+    setBio(option)
+
+    appendMessage({
+      id: nextMessageId(),
+      kind: "text",
+      role: "user",
+      text: `Fico com a ${index + 1}ª bio.`,
+    })
+
+    appendMessage({
+      id: nextMessageId(),
+      kind: "text",
+      role: "copywriter",
+      text: "Perfeito. Essa bio segura bem o posicionamento.",
+    })
+
+    if (positioningNote) {
+      appendMessage({
+        id: nextMessageId(),
+        kind: "text",
+        role: "copywriter",
+        tone: "note",
+        text: positioningNote,
+      })
+    }
+
+    setPhase("contentDecision")
+    appendMessage({
+      id: nextMessageId(),
+      kind: "text",
+      role: "copywriter",
+      text: "Quer que eu já puxe uma ideia de post pra você começar a aplicar isso?",
+    })
+    appendMessage({
+      id: nextMessageId(),
+      kind: "cta",
+      role: "copywriter",
+      actions: [
+        { id: "generate-content", label: "Sim! 💡", variant: "primary" },
+        { id: "skip-content", label: "Depois", variant: "secondary" },
+      ],
+    })
+  }
+
+  async function handleRequestMoreBioOptions() {
+    if (loadingStage || phase !== "selectingBio" || selectedIndex === null) return
+
+    setLoadingStage("assets")
+    const loadingId = showLoadingMessage("Lapidando novas bios irresistíveis...", "copywriter")
+
+    try {
+      const response = await fetch("/api/missao2/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stage: "assets",
+          selectedPhrase: variations[selectedIndex],
+          userPhrase,
+        }),
+      })
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      const payload = await response.json()
+      const data = payload?.data as AssetsResponse | undefined
+      if (!data?.subtitle || !data?.instagramBio || !data?.instagramBioOptions?.length) {
+        throw new Error("Resposta incompleta da IA para novas bios.")
+      }
+
+      setPositioningNote(data.positioningNote ?? null)
+      const refreshedOptions = data.instagramBioOptions.length ? data.instagramBioOptions : [data.instagramBio]
+      setBioOptions(refreshedOptions)
+      setSelectedBioIndex(null)
+      setBio("")
+
+      replaceMessage(loadingId, {
+        id: nextMessageId(),
+        kind: "text",
+        role: "copywriter",
+        text: "Trouxe mais alternativas fresquinhas. Escolhe a que faz seus olhos brilharem:",
+      })
+
+      const newMessageId = nextMessageId()
+      const bioOptionsMessage: ChatMessage = {
+        id: newMessageId,
+        kind: "bioOptions",
+        role: "copywriter",
+        prompt: "Qual dessas bios chega mais perto do seu tom?",
+        options: refreshedOptions,
+        insight: data.positioningNote,
+      }
+
+      if (activeBioMessageId) {
+        replaceMessage(activeBioMessageId, bioOptionsMessage)
+      } else {
+        appendMessage(bioOptionsMessage)
+      }
+      setActiveBioMessageId(newMessageId)
+    } catch (error) {
+      console.error("Erro ao regenerar bios:", error)
+      replaceMessage(loadingId, {
+        id: nextMessageId(),
+        kind: "text",
+        role: "copywriter",
+        text: "Não consegui gerar novas bios agora. Quer tentar mais tarde?",
+      })
+    } finally {
+      setLoadingStage(null)
+    }
+  }
+
   async function generateContentIdea() {
-    if (loadingStage || !subtitle || !bio || selectedIndex === null) return
+    if (loadingStage || !subtitle || !bio || selectedIndex === null || selectedBioIndex === null) return
     setLoadingStage("content")
     const loadingId = showLoadingMessage("Lapidando um gancho campeão...", "copywriter")
 
@@ -1004,7 +1364,7 @@ function Mission2Experience() {
 
   async function finalizeMission() {
     if (isSaving) return
-    if (!userPhrase || selectedIndex === null || !subtitle || !bio) {
+    if (!userPhrase || selectedIndex === null || selectedBioIndex === null || !subtitle || !bio) {
       return
     }
 
@@ -1015,7 +1375,10 @@ function Mission2Experience() {
       selectedPhrase: variations[selectedIndex] ?? "",
       subtitle,
       bio,
+      bioOptions,
+      selectedBioIndex,
       insight: variationInsight,
+      positioningNote: positioningNote ?? undefined,
       contentIdea,
       generatedAt: new Date().toISOString(),
     }
@@ -1079,7 +1442,7 @@ function Mission2Experience() {
         role: "mentor",
         prompt: "Pronto para desbloquear a próxima etapa com o Designer?",
         actions: [
-          { id: "unlock-mission3", label: "🎨 Desbloquear Missão 3 – R$ 0,01", variant: "primary" },
+          buildMission3UnlockAction(hasFullJourneyPlan),
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
         ],
       })
@@ -1113,6 +1476,10 @@ function Mission2Experience() {
     setSelectedIndex(null)
     setSubtitle("")
     setBio("")
+    setBioOptions([])
+    setSelectedBioIndex(null)
+    setPositioningNote(null)
+    setActiveBioMessageId(null)
     setContentIdea(null)
     setFinalResults(null)
     try {
@@ -1262,10 +1629,15 @@ function Mission2Experience() {
                   >
                     <ChatBubble
                       message={message}
-                      currentSelection={selectedIndex}
-                      onSelectOption={handleSelectVariation}
-                      disableOptions={loadingStage !== null || phase !== "selectingOption"}
+                      variationSelection={selectedIndex}
+                      onSelectVariation={handleSelectVariation}
+                      disableVariationOptions={loadingStage !== null || phase !== "selectingOption"}
                       onAction={handleAction}
+                      bioSelection={selectedBioIndex}
+                      onSelectBioOption={handleSelectBioOption}
+                      disableBioOptions={loadingStage !== null || phase !== "selectingBio"}
+                      onRequestMoreBioOptions={handleRequestMoreBioOptions}
+                      activeBioOptionsId={activeBioMessageId}
                     />
                   </MotionDiv>
                 ))}

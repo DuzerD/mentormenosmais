@@ -84,7 +84,9 @@ export function MentorRaizChat({
   const [pendingInput, setPendingInput] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const endOfMessagesRef = useRef<HTMLDivElement>(null)
+  const messageViewportRef = useRef<HTMLDivElement>(null)
+  const shouldStickToBottomRef = useRef(true)
+  const scrollAnimationRef = useRef<number | null>(null)
 
   useEffect(() => {
     setMessages((previous) => {
@@ -96,8 +98,50 @@ export function MentorRaizChat({
   }, [introMessage])
 
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" })
+    const element = messageViewportRef.current
+    if (!element || !shouldStickToBottomRef.current) {
+      return
+    }
+
+    if (scrollAnimationRef.current) {
+      cancelAnimationFrame(scrollAnimationRef.current)
+    }
+
+    if (typeof window === "undefined") {
+      element.scrollTop = element.scrollHeight
+      return
+    }
+
+    scrollAnimationRef.current = window.requestAnimationFrame(() => {
+      element.scrollTo({
+        top: element.scrollHeight,
+        behavior: element.scrollHeight > element.clientHeight ? "smooth" : "auto",
+      })
+      scrollAnimationRef.current = null
+    })
+
+    return () => {
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current)
+        scrollAnimationRef.current = null
+      }
+    }
   }, [messages, isSending])
+
+  const handleMessagesScroll = () => {
+    const element = messageViewportRef.current
+    if (!element) return
+
+    const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight
+    const isNearBottom = distanceFromBottom <= 64
+
+    shouldStickToBottomRef.current = isNearBottom
+
+    if (!isNearBottom && scrollAnimationRef.current) {
+      cancelAnimationFrame(scrollAnimationRef.current)
+      scrollAnimationRef.current = null
+    }
+  }
 
   const buildPromptWithHistory = (userQuestion: string) => {
     const missionGuardrail = hasCompletedAllMissions
@@ -177,6 +221,7 @@ export function MentorRaizChat({
       content: trimmed,
     }
 
+    shouldStickToBottomRef.current = true
     setMessages((previous) => [...previous, userMessage])
     setPendingInput("")
     setErrorMessage(null)
@@ -280,7 +325,11 @@ export function MentorRaizChat({
         </span>
       </div>
 
-      <div className="mt-5 flex-1 space-y-3 overflow-y-auto pr-1">
+      <div
+        ref={messageViewportRef}
+        onScroll={handleMessagesScroll}
+        className="mt-5 flex-1 space-y-3 overflow-y-auto pr-1"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -317,7 +366,6 @@ export function MentorRaizChat({
             </div>
           </div>
         ) : null}
-        <div ref={endOfMessagesRef} />
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4 border-t border-[#ebe5ff] pt-4">

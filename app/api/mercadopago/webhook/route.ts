@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment } from "mercadopago"
 
 type MissionUnlock = "missao_1" | "missao_2" | "missao_3" | "missao_4" | "missao_5" | "todas"
+type MissionKey = Exclude<MissionUnlock, "todas">
 
 interface MercadoPagoWebhookBody {
   action?: string
@@ -27,9 +28,16 @@ const missionOrder: MissionUnlock[] = [
   "todas",
 ]
 
+const missionKeys: MissionKey[] = missionOrder.filter((mission): mission is MissionKey => mission !== "todas")
+
 function missionRank(value: MissionUnlock | null | undefined): number {
   if (!value) return -1
   return missionOrder.indexOf(value)
+}
+
+function normalizeMissionKey(value: unknown): MissionKey | null {
+  if (typeof value !== "string") return null
+  return missionKeys.includes(value as MissionKey) ? (value as MissionKey) : null
 }
 
 function resolveOrigin(request: Request): string {
@@ -71,17 +79,24 @@ async function updateBrandRecord(
   }
   const record = await fetchBrandRecord(origin, idUnico)
   let existingMetadata: Record<string, unknown> = {}
-  let currentMission: MissionUnlock | null = null
+  let storedMission: MissionKey | null = null
+  let completedFromRecord: MissionKey[] = []
+  let hasFullJourney = false
 
   if (record) {
-    const { missaoLiberada, onboardingMetadata } = record
+    const { missaoLiberada, onboardingMetadata, missoesConcluidas } = record as {
+      missaoLiberada?: unknown
+      onboardingMetadata?: unknown
+      missoesConcluidas?: unknown
+    }
 
     if (typeof missaoLiberada === "string") {
-      currentMission = missionOrder.includes(missaoLiberada as MissionUnlock)
-        ? (missaoLiberada as MissionUnlock)
-        : missaoLiberada === "todas"
-          ? "todas"
-          : null
+      if (missaoLiberada === "todas") {
+        hasFullJourney = true
+        storedMission = "missao_5"
+      } else {
+        storedMission = normalizeMissionKey(missaoLiberada)
+      }
     }
 
     if (typeof onboardingMetadata === "string") {
@@ -93,10 +108,60 @@ async function updateBrandRecord(
     } else if (onboardingMetadata && typeof onboardingMetadata === "object") {
       existingMetadata = { ...(onboardingMetadata as Record<string, unknown>) }
     }
+
+    if (Array.isArray(missoesConcluidas)) {
+      completedFromRecord = (missoesConcluidas as unknown[])
+        .map((mission) => normalizeMissionKey(mission))
+        .filter((mission): mission is MissionKey => Boolean(mission))
+    }
   }
 
-  const unlockRank = missionRank(unlocks)
-  const currentRank = missionRank(currentMission)
+  const metadataCompletedRaw =
+    typeof (existingMetadata as { missoesConcluidas?: unknown }).missoesConcluidas === "object" &&
+    Array.isArray((existingMetadata as { missoesConcluidas?: unknown }).missoesConcluidas)
+      ? ((existingMetadata as { missoesConcluidas: unknown[] }).missoesConcluidas as unknown[])
+      : []
+
+  const metadataCompleted = metadataCompletedRaw
+    .map((mission) => normalizeMissionKey(mission))
+    .filter((mission): mission is MissionKey => Boolean(mission))
+
+  const metadataMission =
+    typeof (existingMetadata as { missaoAtual?: unknown }).missaoAtual === "string"
+      ? normalizeMissionKey((existingMetadata as { missaoAtual: string }).missaoAtual)
+      : null
+
+  if (
+    typeof (existingMetadata as { fullJourney?: unknown }).fullJourney === "boolean" &&
+    (existingMetadata as { fullJourney?: boolean }).fullJourney
+  ) {
+    hasFullJourney = true
+  }
+
+  const previousFullJourneyAt =
+    typeof (existingMetadata as { fullJourneyActivatedAt?: unknown }).fullJourneyActivatedAt === "string"
+      ? (existingMetadata as { fullJourneyActivatedAt: string }).fullJourneyActivatedAt
+      : undefined
+
+  const combinedCompleted = Array.from(new Set<MissionKey>([...completedFromRecord, ...metadataCompleted]))
+
+  let missionLiberadaAtual: MissionKey | null = storedMission ?? metadataMission ?? null
+
+  if (!missionLiberadaAtual) {
+    const highestCompletedIndex = combinedCompleted.reduce((highest, mission) => {
+      const index = missionKeys.indexOf(mission)
+      return index > highest ? index : highest
+    }, -1)
+
+    if (highestCompletedIndex >= 0) {
+      missionLiberadaAtual = missionKeys[Math.min(highestCompletedIndex + 1, missionKeys.length - 1)]
+    }
+  }
+
+  if (!missionLiberadaAtual) {
+    missionLiberadaAtual = "missao_1"
+  }
+
   const shouldUnlock = status === "approved" || status === "authorized"
   const previousPending =
     typeof (existingMetadata as { pendingUnlock?: unknown }).pendingUnlock === "string"
@@ -111,14 +176,22 @@ async function updateBrandRecord(
         >)
       : {}
 
-  const missaoLiberada =
-    shouldUnlock && unlocks === "todas"
-      ? "todas"
-      : shouldUnlock && unlockRank > currentRank && unlocks !== "todas"
-        ? unlocks
-        : record?.missaoLiberada ?? currentMission ?? null
+  let fullJourneyActive = hasFullJourney
+  let currentRank = missionRank(missionLiberadaAtual)
 
-  const metadataPatched = {
+  if (shouldUnlock) {
+    if (unlocks === "todas") {
+      fullJourneyActive = true
+    } else {
+      const unlockedMission = normalizeMissionKey(unlocks)
+      if (unlockedMission && missionRank(unlockedMission) > currentRank) {
+        missionLiberadaAtual = unlockedMission
+        currentRank = missionRank(unlockedMission)
+      }
+    }
+  }
+
+  const metadataPatched: Record<string, unknown> = {
     ...existingMetadata,
     pendingUnlock: shouldUnlock ? null : previousPending ?? unlocks,
     lastCheckout: {
@@ -142,13 +215,20 @@ async function updateBrandRecord(
     },
   }
 
+  if (fullJourneyActive) {
+    metadataPatched.fullJourney = true
+    metadataPatched.fullJourneyActivatedAt = previousFullJourneyAt ?? new Date().toISOString()
+  } else if (previousFullJourneyAt) {
+    metadataPatched.fullJourneyActivatedAt = previousFullJourneyAt
+  }
+
   const patchBody: Record<string, unknown> = {
     idUnico,
     onboardingMetadata: metadataPatched,
   }
 
-  if (missaoLiberada) {
-    patchBody.missaoLiberada = missaoLiberada
+  if (missionLiberadaAtual) {
+    patchBody.missaoLiberada = missionLiberadaAtual
   }
 
   if (Array.isArray(record?.missoesConcluidas)) {

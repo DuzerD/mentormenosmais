@@ -1374,18 +1374,27 @@ function SummaryCTA({ onRestart }: { onRestart: () => void }) {
     const idUnico = resolveIdUnico()
     if (!idUnico) return false
     try {
+      const isFullJourneyPlan =
+        plan.liberacao === "jornada_completa" || plan.id === "jornada-completa"
+      const metadataPayload: Record<string, unknown> = {
+        planoSelecionadoEm: new Date().toISOString(),
+        caminho: plan.id,
+      }
+      if (isFullJourneyPlan) {
+        metadataPayload.fullJourneyIntent = true
+      }
+      const requestBody: Record<string, unknown> = {
+        idUnico,
+        planoSelecionado: plan.id,
+        onboardingMetadata: metadataPayload,
+      }
+      if (!isFullJourneyPlan) {
+        requestBody.missaoLiberada = plan.liberacao
+      }
       const response = await fetch("/api/brand-data", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idUnico,
-          planoSelecionado: plan.id,
-          missaoLiberada: plan.liberacao,
-          onboardingMetadata: {
-            planoSelecionadoEm: new Date().toISOString(),
-            caminho: plan.id,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       })
       return response.ok
     } catch (error) {

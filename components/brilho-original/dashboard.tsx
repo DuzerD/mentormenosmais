@@ -874,9 +874,9 @@ export default function Dashboard() {
                     )}
                   >
                     {mission.isActive ? (
-                      <motion.span
-                        layout
-                        className="absolute -inset-px rounded-[26px] border border-[#9e7cf2]/40"
+                    <motion.span
+                      layout
+                      className="pointer-events-none absolute -inset-px rounded-[26px] border border-[#9e7cf2]/40"
                         animate={{ boxShadow: ["0 0 0 0 rgba(158,124,242,0.15)", "0 0 0 12px rgba(158,124,242,0)"] }}
                         transition={{ repeat: Infinity, duration: 1.8, ease: "easeOut" }}
                       />

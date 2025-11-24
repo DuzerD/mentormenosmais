@@ -75,16 +75,28 @@ const stageFormats: Record<
         },
         instagramBio: {
           type: "string",
-          description: "Bio de Instagram com ate 120 caracteres.",
+          description:
+            "Bio principal recomendada para o Instagram com ate 120 caracteres. Deve repetir a melhor opcao da lista instagramBioOptions.",
           minLength: 12,
           maxLength: 120,
+        },
+        instagramBioOptions: {
+          type: "array",
+          description: "Lista de 3 a 5 variacoes de bio para o Instagram, cada uma com ate 120 caracteres.",
+          minItems: 3,
+          maxItems: 5,
+          items: {
+            type: "string",
+            minLength: 12,
+            maxLength: 120,
+          },
         },
         positioningNote: {
           type: "string",
           description: "Nota sobre o foco estrategico adotado.",
         },
       },
-      required: ["subtitle", "instagramBio", "positioningNote"],
+      required: ["subtitle", "instagramBio", "instagramBioOptions", "positioningNote"],
     },
   },
   content: {
@@ -139,7 +151,8 @@ function buildPrompt(payload: RequestPayload): string {
     return [
       "A frase principal escolhida pelo usuario sera a base da mensagem central.",
       "Crie um subtitulo de apoio que deixe explicito o beneficio final para o cliente, em no maximo 20 palavras.",
-      "Gere tambem uma bio de Instagram com ate 120 caracteres, combinando clareza e autoridade.",
+      "Gere tambem tres a cinco opcoes de bio (instagramBioOptions) para o Instagram, cada uma com ate 120 caracteres, combinando clareza e autoridade.",
+      "Selecione a melhor opcao e repita-a no campo instagramBio, mantendo a mesma redacao.",
       brandTone ? `Tom desejado informado: ${brandTone}.` : "Use o tom charmoso, brincalhao e direto da Menos Mais.",
       userPhrase ? `Frase original do usuario para referencia: "${userPhrase}".` : undefined,
       `Frase principal escolhida: "${selectedPhrase}".`,

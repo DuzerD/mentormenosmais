@@ -112,6 +112,7 @@ type BrandRecord = {
   xpProximoNivel?: number | null
   comparativoPercentual?: number | null
   nivelAtual?: string | null
+  planoSelecionado?: string | null
 }
 
 const missionSteps = [
@@ -136,6 +137,63 @@ const missionSteps = [
     description: "5 dias com tema, formato e CTA.",
   },
 ]
+
+function normalizePlanIdentifier(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  return value.trim().toLowerCase().replace(/_/g, "-")
+}
+
+function hasFullJourneyAccess(
+  record: BrandRecord | null,
+  metadata: Record<string, unknown> | null,
+): boolean {
+  const normalize = (candidate: unknown) => normalizePlanIdentifier(candidate)
+
+  const missionValue = normalize(record?.missaoLiberada)
+  if (missionValue === "todas" || missionValue === "jornada-completa") {
+    return true
+  }
+
+  if (metadata) {
+    const metadataFullJourney =
+      typeof (metadata as { fullJourney?: unknown }).fullJourney === "boolean"
+        ? ((metadata as { fullJourney?: boolean }).fullJourney as boolean)
+        : false
+    if (metadataFullJourney) {
+      return true
+    }
+
+    const lastPaymentCandidate =
+      typeof (metadata as { lastPayment?: unknown }).lastPayment === "object" &&
+      (metadata as { lastPayment?: unknown }).lastPayment !== null
+        ? ((metadata as { lastPayment: Record<string, unknown> }).lastPayment as Record<
+            string,
+            unknown
+          >)
+        : null
+
+    if (lastPaymentCandidate) {
+      const unlocksValue = normalize(lastPaymentCandidate.unlocks)
+      const statusValue =
+        typeof lastPaymentCandidate.status === "string"
+          ? lastPaymentCandidate.status.toLowerCase()
+          : null
+      if (unlocksValue === "todas" && statusValue && ["approved", "authorized"].includes(statusValue)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+function buildMission5UnlockAction(hasFullJourney: boolean) {
+  return {
+    id: "unlock-mission5",
+    label: hasFullJourney ? "Ir para a Missão 5 ->" : "?? Desbloquear Missão 5 – R$ 0,01",
+    variant: "primary" as const,
+  }
+}
 
 const MotionDiv = motion.div
 
@@ -168,6 +226,7 @@ function Mission4Content() {
   const [brandRecord, setBrandRecord] = useState<BrandRecord | null>(null)
   const [strategyData, setStrategyData] = useState<Record<string, unknown> | null>(null)
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
+  const [hasFullJourneyPlan, setHasFullJourneyPlan] = useState(false)
   const [idUnico, setIdUnico] = useState<string | null>(null)
   const [creatorName, setCreatorName] = useState<string | null>(null)
   const [introDispatched, setIntroDispatched] = useState(false)
@@ -196,6 +255,40 @@ function Mission4Content() {
       fetchBrandRecord(idUnico)
     }
   }, [idUnico])
+
+  useEffect(() => {
+    setHasFullJourneyPlan(hasFullJourneyAccess(brandRecord, metadata))
+  }, [brandRecord, metadata])
+
+  useEffect(() => {
+    if (!hasFullJourneyPlan) return
+    setMessages((previous) => {
+      let mutated = false
+      const desired = buildMission5UnlockAction(true)
+      const updated = previous.map((message) => {
+        if (message.kind !== "cta") {
+          return message
+        }
+        let actionMutated = false
+        const actions = message.actions.map((action) => {
+          if (action.id !== "unlock-mission5") {
+            return action
+          }
+          if (action.label === desired.label && action.variant === desired.variant) {
+            return action
+          }
+          actionMutated = true
+          return { ...action, label: desired.label, variant: desired.variant }
+        })
+        if (actionMutated) {
+          mutated = true
+          return { ...message, actions }
+        }
+        return message
+      })
+      return mutated ? updated : previous
+    })
+  }, [hasFullJourneyPlan])
 
   useEffect(() => {
     if (!restoring) {
@@ -244,6 +337,17 @@ function Mission4Content() {
       const record = json.data
       setBrandRecord(record)
 
+      let metadataParsed: Record<string, unknown> | null = null
+      if (record.onboardingMetadata) {
+        metadataParsed =
+          typeof record.onboardingMetadata === "string"
+            ? (JSON.parse(record.onboardingMetadata) as Record<string, unknown>)
+            : (record.onboardingMetadata as Record<string, unknown>)
+      }
+      setMetadata(metadataParsed)
+      const fullJourneyAccess = hasFullJourneyAccess(record, metadataParsed)
+      setHasFullJourneyPlan(fullJourneyAccess)
+
       if (record.estrategia) {
         const strategy =
           typeof record.estrategia === "string"
@@ -255,16 +359,8 @@ function Mission4Content() {
 
         const storedMission4 = strategy?.missao4 as Mission4Results | undefined
         if (storedMission4?.selectedIdeaId && !finalResults) {
-          restoreMission4(storedMission4)
+          restoreMission4(storedMission4, fullJourneyAccess)
         }
-      }
-
-      if (record.onboardingMetadata) {
-        const parsed =
-          typeof record.onboardingMetadata === "string"
-            ? (JSON.parse(record.onboardingMetadata) as Record<string, unknown>)
-            : (record.onboardingMetadata as Record<string, unknown>)
-        setMetadata(parsed ?? null)
       }
     } catch (error) {
       console.warn("Não foi possível recuperar dados da marca (Missão 4):", error)
@@ -323,7 +419,7 @@ function Mission4Content() {
     }
   }
 
-  function restoreMission4(results: Mission4Results) {
+  function restoreMission4(results: Mission4Results, fullJourneyAccess?: boolean) {
     setRestoring(true)
     setIdeasList(results.ideas)
     setSelectedIdeaId(results.selectedIdeaId)
@@ -411,7 +507,7 @@ function Mission4Content() {
         kind: "cta",
         role: "social",
         prompt: "Pronto pra ver suas ideias de conteúdo prontas?",
-        actions: [{ id: "start-plan", label: "Bora ver o plano 🔥", variant: "primary" }],
+        actions: [{ id: "start-plan", label: "Bora ver o plano ??", variant: "primary" }],
       },
     ]
 
@@ -443,7 +539,11 @@ function Mission4Content() {
         handleChooseOtherIdea()
         return
       case "unlock-mission5":
-        handleUnlockMission5()
+        if (hasFullJourneyPlan) {
+          router.push("/missao5")
+        } else {
+          handleUnlockMission5()
+        }
         return
       case "go-dashboard":
         router.push("/dashboard")
@@ -577,8 +677,8 @@ function Mission4Content() {
         role: "social",
         prompt: "Quer que eu monte a legenda também?",
         actions: [
-          { id: "approve-roteiro", label: "Sim 💬", variant: "primary" },
-          { id: "choose-other-idea", label: "Não, quero outra ideia 🔁" },
+          { id: "approve-roteiro", label: "Sim ??", variant: "primary" },
+          { id: "choose-other-idea", label: "Não, quero outra ideia ??" },
         ],
       })
     } catch (error) {
@@ -817,7 +917,7 @@ function Mission4Content() {
         role: "mentor",
         prompt: "Quer desbloquear a Missao 5 - Analise & Ajuste?",
         actions: [
-          { id: "unlock-mission5", label: "\uD83D\uDCCA Desbloquear Miss\u00e3o 5 – R$ 0,01", variant: "primary" },
+          buildMission5UnlockAction(hasFullJourneyPlan),
           { id: "go-dashboard", label: "Voltar para a Sala da Marca" },
         ],
       })
@@ -921,6 +1021,15 @@ function Mission4Content() {
   }
 
   function handleUnlockMission5() {
+    if (hasFullJourneyPlan) {
+      toast({
+        title: "Missao 5 liberada",
+        description: "Seu plano Jornada Completa ja cobre a ultima etapa. Vou te levar direto para ela.",
+      })
+      router.push("/missao5")
+      return
+    }
+
     toast({
       title: "Missao 5 - Analise & Ajuste",
       description: "Voce sera direcionado para finalizar o desbloqueio com seguranca.",
@@ -1303,4 +1412,5 @@ function ContentLine({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
 
