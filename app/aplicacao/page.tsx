@@ -180,7 +180,7 @@ export default function AplicacaoPage() {
                   </div>
                   <div className="rounded-xl bg-[#222052] px-4 py-3 text-white force-white shadow-md">
                     <p className="text-sm font-semibold">
-                      Escreva a palavra "menos" no direct do Davi Ribas (@menosmaistd) e garanta seu material
+                      Escreva a palavra "menos" no direct do Menos é Mais (@menosmaistd) e garanta seu material
                       exclusivo.
                     </p>
                   </div>
