@@ -1,0 +1,23 @@
+{
+  "name": "Vicgario Content Machine",
+  "id": "1483614714229000332",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": ["figma"],
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": [
+      "https://fonts.googleapis.com",
+      "https://fonts.gstatic.com",
+      "https://ce57cfe1-fd80-409a-92f7-39002881649c-00-mc77jw6ids0r.kirk.replit.dev",
+      "https://ia.vicgar.io"
+    ],
+    "devAllowedDomains": [
+      "http://localhost:3000",
+      "https://localhost:3000"
+    ]
+  }
+}

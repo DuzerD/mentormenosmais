@@ -1,50 +1,27 @@
-import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
-import "./globals.css"
 
-// <CHANGE> Updated to use Inter font instead of Geist
+import "./globals.css"
+import { Inter } from "next/font/google"
+
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "600"],
   variable: "--font-inter",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: "Fature Falando Menos",
-  description: "Formulário de aplicação",
-  generator: "v0.app",
+  title: "Mentoor — Marca em ordem",
+  description: "Descubra o que falta para a sua marca vender mais fazendo menos.",
+  generator: "mentoor.app",
   icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
+    icon: "/images/mentoor-mark.svg",
   },
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
-        <Analytics />
-      </body>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${inter.className} brand-theme`}>{children}</body>
     </html>
   )
 }
