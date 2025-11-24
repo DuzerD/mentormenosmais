@@ -1499,7 +1499,7 @@ function SummaryCard({
             </p>
             <p className="flex items-center gap-2">
               <Rocket className="h-4 w-4 text-[#6ab7d6]" />
-              Clareza 62% -> 75%
+              Clareza 62% &rarr; 75%
             </p>
             <p className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#6ab7d6]" />
